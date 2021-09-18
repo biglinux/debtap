@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-#	Copyright 2014-2021 George Savvidis
+#	Copyright 2014-2020 George Savvidis
 
 #	This program is free software: you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-Version=3.4.2
+Version=3.4
 
 # Defining colors and bold letters
 lightgreen='\e[1;32m'
@@ -89,12 +89,12 @@ elif [[ $update == set ]]; then
             gzip -df /var/cache/debtap/debian-non-free-packages-files.gz
             curl -C - -f http://ftp.debian.org/debian/dists/sid/contrib/Contents-$_arch.gz > /var/cache/debtap/debian-contrib-packages-files.gz
             gzip -df /var/cache/debtap/debian-contrib-packages-files.gz
-            if [[ $_arch == amd64 ]]; then
-                curl -C - -f http://archive.ubuntu.com/ubuntu/dists/$ubuntu_latest_stable_version/Contents-$_arch.gz > /var/cache/debtap/ubuntu-packages-files.gz
-            else
-                curl -C - -f http://ports.ubuntu.com/ubuntu-ports/dists/$ubuntu_latest_stable_version/Contents-$_arch.gz > /var/cache/debtap/ubuntu-packages-files.gz
-            fi
-            gzip -df /var/cache/debtap/ubuntu-packages-files.gz
+#             if [[ $_arch == amd64 ]]; then
+#                 curl -C - -f http://archive.ubuntu.com/ubuntu/dists/$ubuntu_latest_stable_version/Contents-$_arch.gz > /var/cache/debtap/ubuntu-packages-files.gz
+#             else
+#                 curl -C - -f http://ports.ubuntu.com/ubuntu-ports/dists/$ubuntu_latest_stable_version/Contents-$_arch.gz > /var/cache/debtap/ubuntu-packages-files.gz
+#             fi
+            #gzip -df /var/cache/debtap/ubuntu-packages-files.gz
             if [[ $(echo $?) != 0 ]]; then
                 echo -e "${red}Synchronization failed. Exiting...${NC}"; exit 1
             else
@@ -126,21 +126,21 @@ elif [[ "${@: -1}" == "debtap" ]] || [[ "${@: -1}" =~ /debtap$ ]] || [[ "${@: -1
 	echo -e "${red}Error: You haven't specified a deb package${NC}\nSyntax: debtap [options] package_filename\n\nOptions:\n\n    -h  --help        Print this help message\n    -u  --update      Update debtap database\n    -q  --quiet       Bypass all questions, except for editing metadata file(s)\n    -Q  --Quiet       Bypass all questions (not recommended)\n    -s  --pseudo      Create a pseudo-64-bit package from a 32-bit .deb package\n    -w  --wipeout     Wipeout versions from all dependencies, conflicts etc.\n    -p  --pkgbuild    Additionally generate a PKGBUILD file\n    -P  --Pkgbuild    Generate a PKGBUILD file only\n    -v  --version     Print version"; exit 1
 elif [[ "${@: -1}" =~ ^(-)+(.)*$ ]] || [[ $(ls "${@: -1}" &> /dev/null; echo $?) != 0 ]]; then
 	echo -e "${red}Error: No such file or directory or invalid option${NC}"; exit 1
-elif [[ $(file -S -b "${@: -1}" | grep -q "Debian binary package"; echo $?) != 0 ]]; then
+elif [[ $(file -b "${@: -1}" | grep -q "Debian binary package"; echo $?) != 0 ]]; then
 	echo -e "${red}Error: You haven't specified a valid deb package${NC}"; exit 1
 fi
 
-if [[ ! $(ls /var/cache/pkgfile/*.files 2> /dev/null) ]] || [[ ! $(ls /var/cache/debtap/*-packages-files 2> /dev/null) ]] || [[ ! -e /var/cache/debtap/base-packages ]] || [[ ! -e /var/cache/debtap/aur-packages ]] || [[ ! -e /var/cache/debtap/virtual-packages ]]; then
-	if [[ $pseudo != set ]]; then
-		echo -e "${red}Error: You must run at least once \"debtap -u\" with root privileges (preferably recently), before running this script${NC}"; exit 1
-	else
-		echo -e "${red}Error: You must enable a multilib repository, synchronize pacman database and then run at least once \"debtap -u\" with root privileges (preferably recently), before running this script${NC}"; exit 1
-	fi
-fi
+# if [[ ! $(ls /var/cache/pkgfile/*.files 2> /dev/null) ]] || [[ ! $(ls /var/cache/debtap/*-packages-files 2> /dev/null) ]] || [[ ! -e /var/cache/debtap/base-packages ]] || [[ ! -e /var/cache/debtap/aur-packages ]] || [[ ! -e /var/cache/debtap/virtual-packages ]]; then
+# 	if [[ $pseudo != set ]]; then
+# 		echo -e "${red}Error: You must run at least once \"debtap -u\" with root privileges (preferably recently), before running this script${NC}"; exit 1
+# 	else
+# 		echo -e "${red}Error: You must enable a multilib repository, synchronize pacman database and then run at least once \"debtap -u\" with root privileges (preferably recently), before running this script${NC}"; exit 1
+# 	fi
+# fi
 
 # Defining package with full path & defining and creating working directory
 package_with_full_path="`readlink -f "${@: -1}"`"
-working_directory="`basename "${@: -1}" | tr '[:upper:]' '[:lower:]' | sed s'/\.deb$//'`-working-directory"
+working_directory="$HOME/debtap-mod-working-directory"
 rm -rf "$working_directory" 2> /dev/null
 mkdir "$working_directory" 2> /dev/null
 if [[ $(echo $?) != 0 ]]; then
@@ -190,174 +190,173 @@ if [[ $pkgbuild == set ]] || [[ $Pkgbuild == set ]]; then
 			echo "install -D -m644 \"$(find ./ -iname '*copyright*' | sort | tail -1 | sed s'/^\.//')\" \"\${pkgdir}/usr/share/licenses/\${pkgname}/LICENSE\"" >> pkgbuildinstallations1
 		fi
 	fi
-	if [[ $(find ./ -iname '*eula*' | wc -l) != 0 ]]; then
-		if [[ $(find ./ -iname '*license*' | wc -l) != 0 ]] || [[ $(find ./ -iname '*copyright*' | wc -l) != 0 ]]; then
-			echo "install -D -m644 \"$(find ./ -iname '*eula*' | sort | tail -1 | sed s'/^\.//')\" \"\${pkgdir}/usr/share/licenses/\${pkgname}/EULA\"" >> pkgbuildinstallations1
-		else
-			echo "install -D -m644 \"$(find ./ -iname '*eula*' | sort | tail -1 | sed s'/^\.//')\" \"\${pkgdir}/usr/share/licenses/\${pkgname}/LICENSE\"" >> pkgbuildinstallations1
-		fi
-	fi
-	if [[ -e usr/games ]]; then
-		echo 'mkdir usr/bin 2> /dev/null; mv usr/games/* usr/bin; rm -rf usr/games' >> pkgbuildinstallations1
-		if [[ -e usr/share/applications ]]; then
-			echo -e "ls usr/share/applications/*.desktop | while read line; do\n\tsed -i s'/^Exec=\\/usr\\/games\\//Exec=\\/usr\\/bin\\//g' \"$line\"\ndone" >> pkgbuildinstallations1
-		fi
-	fi
-	if [[ -e bin ]]; then
-		echo 'mkdir -p usr/bin 2> /dev/null; mv bin/* usr/bin; rm -rf bin' >> pkgbuildinstallations1
-		if [[ -e usr/share/applications ]]; then
-			echo -e "ls usr/share/applications/*.desktop | while read line; do\n\tsed -i s'/^Exec=\\/bin\\//Exec=\\/usr\\/bin\\//g' \"$line\"\ndone" >> pkgbuildinstallations1
-		fi
-	fi
-	if [[ -e sbin ]]; then
-		echo 'mkdir -p usr/bin 2> /dev/null; mv sbin/* usr/bin; rm -rf sbin' >> pkgbuildinstallations1
-		if [[ -e usr/share/applications ]]; then
-			echo -e "ls usr/share/applications/*.desktop | while read line; do\n\tsed -i s'/^Exec=\\/sbin\\//Exec=\\/usr\\/bin\\//g' \"$line\"\ndone" >> pkgbuildinstallations1
-		fi
-	fi
-	if [[ -e usr/sbin ]]; then
-		echo 'mkdir usr/bin 2> /dev/null; mv usr/sbin/* usr/bin; rm -rf usr/sbin' >> pkgbuildinstallations1
-		if [[ -e usr/share/applications ]]; then
-			echo -e "ls usr/share/applications/*.desktop | while read line; do\n\tsed -i s'/^Exec=\\/usr\\/sbin\\//Exec=\\/usr\\/bin\\//g' \"$line\"\ndone" >> pkgbuildinstallations1
-		fi
-	fi
-	if [[ -e usr/local/games ]]; then
-		echo 'mkdir usr/bin 2> /dev/null; mv usr/local/games/* usr/bin; rm -rf usr/local/games' >> pkgbuildinstallations1
-		if [[ -e usr/share/applications ]]; then
-			echo -e "ls usr/share/applications/*.desktop | while read line; do\n\tsed -i s'/^Exec=\\/usr\\/local\\/games\\//Exec=\\/usr\\/bin\\//g' \"$line\"\ndone" >> pkgbuildinstallations1
-		fi
-	fi
-	if [[ -e usr/local/bin ]]; then
-		echo 'mkdir usr/bin 2> /dev/null; mv usr/local/bin/* usr/bin; rm -rf usr/local/bin' >> pkgbuildinstallations1
-		if [[ -e usr/share/applications ]]; then
-			echo -e "ls usr/share/applications/*.desktop | while read line; do\n\tsed -i s'/^Exec=\\/usr\\/local\\/bin\\//Exec=\\/usr\\/bin\\//g' \"$line\"\ndone" >> pkgbuildinstallations1
-		fi
-	fi
-	if [[ -e usr/local/sbin ]]; then
-		echo 'mkdir usr/bin 2> /dev/null; mv usr/local/sbin/* usr/bin; rm -rf usr/local/sbin' >> pkgbuildinstallations1
-		if [[ -e usr/share/applications ]]; then
-			echo -e "ls usr/share/applications/*.desktop | while read line; do\n\tsed -i s'/^Exec=\\/usr\\/local\\/sbin\\//Exec=\\/usr\\/bin\\//g' \"$line\"\ndone" >> pkgbuildinstallations1
-		fi
-	fi
-	if [[ $pseudo != set ]]; then
-		if [[ -e lib ]]; then
-			echo 'mkdir -p usr/lib 2> /dev/null; mv lib/* usr/lib; rm -rf lib' >> pkgbuildinstallations1
-		fi
-		if [[ -e lib32 ]]; then
-			if [[ $(grep -i ^Architecture: control | grep -q i386; echo $?) == 0 ]]; then
-				echo 'mkdir -p usr/lib 2> /dev/null; mv lib32/* usr/lib; rm -rf lib32' >> pkgbuildinstallations32
-			else
-				echo 'mkdir -p usr/lib32 2> /dev/null; mv lib32/* usr/lib32; rm -rf lib32' >> pkgbuildinstallations64
-			fi
-		fi
-		if [[ -e lib64 ]]; then
-			echo 'mkdir -p usr/lib 2> /dev/null; mv lib64/* usr/lib; rm -rf lib64' >> pkgbuildinstallations64
-		fi
-		if [[ -e usr/lib32 ]] && [[ $(grep -i ^Architecture: control | grep -q i386; echo $?) == 0 ]]; then
-			echo 'mkdir usr/lib 2> /dev/null; mv usr/lib32/* usr/lib; rm -rf usr/lib32' >> pkgbuildinstallations32
-		fi
-		if [[ -e usr/lib64 ]]; then
-			echo 'mkdir usr/lib 2> /dev/null; mv usr/lib64/* usr/lib; rm -rf usr/lib64' >> pkgbuildinstallations64
-		fi
-		if [[ -e usr/local/lib32 ]] && [[ $(grep -i ^Architecture: control | grep -q i386; echo $?) == 0 ]]; then
-			echo 'mkdir usr/local/lib 2> /dev/null; mv usr/local/lib32/* usr/local/lib; rm -rf usr/local/lib32' >> pkgbuildinstallations32
-		fi
-		if [[ -e usr/local/lib64 ]]; then
-			echo 'mkdir usr/local/lib 2> /dev/null; mv usr/local/lib64/* usr/local/lib; rm -rf usr/local/lib64' >> pkgbuildinstallations64
-		fi
-	else
-		if [[ -e lib ]]; then
-			tac pkgbuildinstallations32 2> /dev/null >> pkgbuildinstallations32-1; echo 'mkdir -p usr/lib 2> /dev/null; mv lib/* usr/lib; rm -rf lib' >> pkgbuildinstallations32-1; tac pkgbuildinstallations32-1 > pkgbuildinstallations32; rm -rf pkgbuildinstallations32-1
-			echo 'mkdir -p usr/lib32 2> /dev/null; mv lib/* usr/lib32; rm -rf lib' >> pkgbuildinstallations64
-		fi
-		if [[ -e lib32 ]]; then
-			echo 'mkdir -p usr/lib32 2> /dev/null; mv lib32/* usr/lib32; rm -rf lib32' >> pkgbuildinstallations64
-		fi
-		if [[ -e usr/lib ]]; then
-			echo 'mkdir usr/lib32 2> /dev/null; mv usr/lib/* usr/lib32; rm -rf usr/lib' >> pkgbuildinstallations64
-		fi
-		if [[ -e usr/local/lib ]]; then
-			echo 'mkdir usr/local/lib32 2> /dev/null; mv usr/local/lib/* usr/local/lib32; rm -rf usr/local/lib' >> pkgbuildinstallations64
-		fi
-	fi
+ 	if [[ $(find ./ -iname '*eula*' | wc -l) != 0 ]]; then
+ 		if [[ $(find ./ -iname '*license*' | wc -l) != 0 ]] || [[ $(find ./ -iname '*copyright*' | wc -l) != 0 ]]; then
+ 			echo "install -D -m644 \"$(find ./ -iname '*eula*' | sort | tail -1 | sed s'/^\.//')\" \"\${pkgdir}/usr/share/licenses/\${pkgname}/EULA\"" >> pkgbuildinstallations1
+ 		else
+ 			echo "install -D -m644 \"$(find ./ -iname '*eula*' | sort | tail -1 | sed s'/^\.//')\" \"\${pkgdir}/usr/share/licenses/\${pkgname}/LICENSE\"" >> pkgbuildinstallations1
+ 		fi
+ 	fi
+# 	if [[ -e usr/games ]]; then
+# 		echo 'mkdir usr/bin 2> /dev/null; mv usr/games/* usr/bin; rm -rf usr/games' >> pkgbuildinstallations1
+# 		if [[ -e usr/share/applications ]]; then
+# 			echo -e "ls usr/share/applications/*.desktop | while read line; do\n\tsed -i s'/^Exec=\\/usr\\/games\\//Exec=\\/usr\\/bin\\//g' \"$line\"\ndone" >> pkgbuildinstallations1
+# 		fi
+# 	fi
+ 	if [[ -e bin ]]; then
+ 		echo 'mkdir -p usr/bin 2> /dev/null; mv bin/* usr/bin; rm -rf bin' >> pkgbuildinstallations1
+#  		if [[ -e usr/share/applications ]]; then
+#  			echo -e "ls usr/share/applications/*.desktop | while read line; do\n\tsed -i s'/^Exec=\\/bin\\//Exec=\\/usr\\/bin\\//g' \"$line\"\ndone" >> pkgbuildinstallations1
+#  		fi
+ 	fi
+ 	if [[ -e sbin ]]; then
+ 		echo 'mkdir -p usr/bin 2> /dev/null; mv sbin/* usr/bin; rm -rf sbin' >> pkgbuildinstallations1
+# 		if [[ -e usr/share/applications ]]; then
+# 			echo -e "ls usr/share/applications/*.desktop | while read line; do\n\tsed -i s'/^Exec=\\/sbin\\//Exec=\\/usr\\/bin\\//g' \"$line\"\ndone" >> pkgbuildinstallations1
+ 		fi
+# 	fi
+# 	if [[ -e usr/sbin ]]; then
+# 		echo 'mkdir usr/bin 2> /dev/null; mv usr/sbin/* usr/bin; rm -rf usr/sbin' >> pkgbuildinstallations1
+# 		if [[ -e usr/share/applications ]]; then
+# 			echo -e "ls usr/share/applications/*.desktop | while read line; do\n\tsed -i s'/^Exec=\\/usr\\/sbin\\//Exec=\\/usr\\/bin\\//g' \"$line\"\ndone" >> pkgbuildinstallations1
+# 		fi
+# 	fi
+# 	if [[ -e usr/local/games ]]; then
+# 		echo 'mkdir usr/bin 2> /dev/null; mv usr/local/games/* usr/bin; rm -rf usr/local/games' >> pkgbuildinstallations1
+# 		if [[ -e usr/share/applications ]]; then
+# 			echo -e "ls usr/share/applications/*.desktop | while read line; do\n\tsed -i s'/^Exec=\\/usr\\/local\\/games\\//Exec=\\/usr\\/bin\\//g' \"$line\"\ndone" >> pkgbuildinstallations1
+# 		fi
+# 	fi
+# 	if [[ -e usr/local/bin ]]; then
+# 		echo 'mkdir usr/bin 2> /dev/null; mv usr/local/bin/* usr/bin; rm -rf usr/local/bin' >> pkgbuildinstallations1
+# 		if [[ -e usr/share/applications ]]; then
+# 			echo -e "ls usr/share/applications/*.desktop | while read line; do\n\tsed -i s'/^Exec=\\/usr\\/local\\/bin\\//Exec=\\/usr\\/bin\\//g' \"$line\"\ndone" >> pkgbuildinstallations1
+# 		fi
+# 	fi
+# 	if [[ -e usr/local/sbin ]]; then
+# 		echo 'mkdir usr/bin 2> /dev/null; mv usr/local/sbin/* usr/bin; rm -rf usr/local/sbin' >> pkgbuildinstallations1
+# 		if [[ -e usr/share/applications ]]; then
+# 			echo -e "ls usr/share/applications/*.desktop | while read line; do\n\tsed -i s'/^Exec=\\/usr\\/local\\/sbin\\//Exec=\\/usr\\/bin\\//g' \"$line\"\ndone" >> pkgbuildinstallations1
+# 		fi
+# 	fi
+ 	if [[ $pseudo != set ]]; then
+ 		if [[ -e lib ]]; then
+ 			echo 'mkdir -p usr/lib 2> /dev/null; mv lib/* usr/lib; rm -rf lib' >> pkgbuildinstallations1
+ 		fi
+ 		if [[ -e lib32 ]]; then
+ 			if [[ $(grep -i ^Architecture: control | grep -q i386; echo $?) == 0 ]]; then
+ 				echo 'mkdir -p usr/lib 2> /dev/null; mv lib32/* usr/lib; rm -rf lib32' >> pkgbuildinstallations32
+ 			else
+ 				echo 'mkdir -p usr/lib32 2> /dev/null; mv lib32/* usr/lib32; rm -rf lib32' >> pkgbuildinstallations64
+ 			fi
+ 		fi
+ 		if [[ -e lib64 ]]; then
+ 			echo 'mkdir -p usr/lib 2> /dev/null; mv lib64/* usr/lib; rm -rf lib64' >> pkgbuildinstallations64
+ 		fi
+ 		if [[ -e usr/lib32 ]] && [[ $(grep -i ^Architecture: control | grep -q i386; echo $?) == 0 ]]; then
+ 			echo 'mkdir usr/lib 2> /dev/null; mv usr/lib32/* usr/lib; rm -rf usr/lib32' >> pkgbuildinstallations32
+ 		fi
+ 		if [[ -e usr/lib64 ]]; then
+ 			echo 'mkdir usr/lib 2> /dev/null; mv usr/lib64/* usr/lib; rm -rf usr/lib64' >> pkgbuildinstallations64
+ 		fi
+ 		if [[ -e usr/local/lib32 ]] && [[ $(grep -i ^Architecture: control | grep -q i386; echo $?) == 0 ]]; then
+ 			echo 'mkdir usr/local/lib 2> /dev/null; mv usr/local/lib32/* usr/local/lib; rm -rf usr/local/lib32' >> pkgbuildinstallations32
+ 		fi
+ 		if [[ -e usr/local/lib64 ]]; then
+ 			echo 'mkdir usr/local/lib 2> /dev/null; mv usr/local/lib64/* usr/local/lib; rm -rf usr/local/lib64' >> pkgbuildinstallations64
+ 		fi
+ 	else
+ 		if [[ -e lib ]]; then
+ 			tac pkgbuildinstallations32 2> /dev/null >> pkgbuildinstallations32-1; echo 'mkdir -p usr/lib 2> /dev/null; mv lib/* usr/lib; rm -rf lib' >> pkgbuildinstallations32-1; tac pkgbuildinstallations32-1 > pkgbuildinstallations32; rm -rf pkgbuildinstallations32-1
+ 			echo 'mkdir -p usr/lib32 2> /dev/null; mv lib/* usr/lib32; rm -rf lib' >> pkgbuildinstallations64
+ 		fi
+ 		if [[ -e lib32 ]]; then
+ 			echo 'mkdir -p usr/lib32 2> /dev/null; mv lib32/* usr/lib32; rm -rf lib32' >> pkgbuildinstallations64
+ 		fi
+ 		if [[ -e usr/lib ]]; then
+ 			echo 'mkdir usr/lib32 2> /dev/null; mv usr/lib/* usr/lib32; rm -rf usr/lib' >> pkgbuildinstallations64
+ 		fi
+ 		if [[ -e usr/local/lib ]]; then
+ 			echo 'mkdir usr/local/lib32 2> /dev/null; mv usr/local/lib/* usr/local/lib32; rm -rf usr/local/lib' >> pkgbuildinstallations64
+ 		fi
+ 	fi
 fi
 
-if [[ -e usr/games ]]; then
-	mkdir usr/bin 2> /dev/null; mv usr/games/* usr/bin; rm -rf usr/games
-fi
-if [[ -e bin ]]; then
-	mkdir -p usr/bin 2> /dev/null; mv bin/* usr/bin; rm -rf bin
-fi
-if [[ -e sbin ]]; then
-	mkdir -p usr/bin 2> /dev/null; mv sbin/* usr/bin; rm -rf sbin
-fi
-if [[ -e usr/sbin ]]; then
-	mkdir usr/bin 2> /dev/null; mv usr/sbin/* usr/bin; rm -rf usr/sbin
-fi
-if [[ -e usr/local/games ]]; then
-	mkdir usr/bin 2> /dev/null; mv usr/local/games/* usr/bin; rm -rf usr/local/games
-fi
-if [[ -e usr/local/bin ]]; then
-	mkdir usr/bin 2> /dev/null; mv usr/local/bin/* usr/bin; rm -rf usr/local/bin
-fi
-if [[ -e usr/local/sbin ]]; then
-	mkdir usr/bin 2> /dev/null; mv usr/local/sbin/* usr/bin; rm -rf usr/local/sbin
-fi
-if [[ -e usr/share/applications ]]; then
-	ls usr/share/applications/*.desktop | while read line; do
-		sed -i -e s'/^Exec=\/bin\//Exec=\/usr\/bin\//g' -e s'/^Exec=\/sbin\//Exec=\/usr\/bin\//g' -e s'/^Exec=\/usr\/sbin\//Exec=\/usr\/bin\//g' -e s'/^Exec=\/usr\/games\//Exec=\/usr\/bin\//g' -e s'/^Exec=\/usr\/local\/bin\//Exec=\/usr\/bin\//g' -e s'/^Exec=\/usr\/local\/sbin\//Exec=\/usr\/bin\//g' -e s'/^Exec=\/usr\/local\/games\//Exec=\/usr\/bin\//g' "$line" 2> /dev/null
-	done
-fi
-if [[ $pseudo != set ]]; then
-	if [[ -e lib ]]; then
-		mkdir -p usr/lib 2> /dev/null; mv lib/* usr/lib; rm -rf lib
-	fi
-	if [[ -e lib32 ]]; then
-		if [[ $(grep -i ^Architecture: control | grep -q i386; echo $?) == 0 ]]; then
-			mkdir -p usr/lib 2> /dev/null; mv lib32/* usr/lib; rm -rf lib32
-		else
-			mkdir -p usr/lib32 2> /dev/null; mv lib32/* usr/lib32; rm -rf lib32
-		fi
-	fi
-	if [[ -e lib64 ]]; then
-		mkdir -p usr/lib 2> /dev/null; mv lib64/* usr/lib; rm -rf lib64
-	fi
-	if [[ -e usr/lib32 ]] && [[ $(grep -i ^Architecture: control | grep -q i386; echo $?) == 0 ]]; then
-		mkdir usr/lib 2> /dev/null; mv usr/lib32/* usr/lib; rm -rf usr/lib32
-	fi
-	if [[ -e usr/lib64 ]]; then
-		mkdir usr/lib 2> /dev/null; mv usr/lib64/* usr/lib; rm -rf usr/lib64
-	fi
-	if [[ -e usr/local/lib32 ]] && [[ $(grep -i ^Architecture: control | grep -q i386; echo $?) == 0 ]]; then
-		mkdir usr/local/lib 2> /dev/null; mv usr/local/lib32/* usr/local/lib; rm -rf usr/local/lib32
-	fi
-	if [[ -e usr/local/lib64 ]]; then
-		mkdir usr/local/lib 2> /dev/null; mv usr/local/lib64/* usr/local/lib; rm -rf usr/local/lib64
-	fi
-else
-	if [[ -e lib ]]; then
-		mkdir -p usr/lib32 2> /dev/null; mv lib/* usr/lib32; rm -rf lib
-	fi
-	if [[ -e lib32 ]]; then
-		mkdir -p usr/lib32 2> /dev/null; mv lib32/* usr/lib32; rm -rf lib32
-	fi
-	if [[ -e usr/lib ]]; then
-		mkdir usr/lib32 2> /dev/null; mv usr/lib/* usr/lib32; rm -rf usr/lib
-	fi
-	if [[ -e usr/local/lib ]]; then
-		mkdir usr/local/lib32 2> /dev/null; mv usr/local/lib/* usr/local/lib32; rm -rf usr/local/lib
-	fi
-fi
-
-if [[ $pkgbuild == set ]] || [[ $Pkgbuild == set ]]; then
-	if [[ -e usr/local ]] && [[ ! $(ls -A usr/local 2> /dev/null) ]]; then
-		echo 'rm -rf usr/local' >> pkgbuildinstallations2
-	fi
-fi
-
-if [[ -e usr/local ]] && [[ ! $(ls -A usr/local 2> /dev/null) ]]; then
-	rm -rf usr/local
-fi
+# if [[ -e usr/games ]]; then
+# 	mkdir usr/bin 2> /dev/null; mv usr/games/* usr/bin; rm -rf usr/games
+# fi
+ if [[ -e bin ]]; then
+ 	mkdir -p usr/bin 2> /dev/null; mv bin/* usr/bin; rm -rf bin
+ fi
+ if [[ -e sbin ]]; then
+ 	mkdir -p usr/bin 2> /dev/null; mv sbin/* usr/bin; rm -rf sbin
+ fi
+# if [[ -e usr/sbin ]]; then
+# 	mkdir usr/bin 2> /dev/null; mv usr/sbin/* usr/bin; rm -rf usr/sbin
+# fi
+# if [[ -e usr/local/games ]]; then
+# 	mkdir usr/bin 2> /dev/null; mv usr/local/games/* usr/bin; rm -rf usr/local/games
+# fi
+# if [[ -e usr/local/bin ]]; then
+# 	mkdir usr/bin 2> /dev/null; mv usr/local/bin/* usr/bin; rm -rf usr/local/bin
+# fi
+# if [[ -e usr/local/sbin ]]; then
+# 	mkdir usr/bin 2> /dev/null; mv usr/local/sbin/* usr/bin; rm -rf usr/local/sbin
+# fi
+# if [[ -e usr/share/applications ]]; then
+# 	ls usr/share/applications/*.desktop | while read line; do
+# 		sed -i -e s'/^Exec=\/bin\//Exec=\/usr\/bin\//g' -e s'/^Exec=\/sbin\//Exec=\/usr\/bin\//g' -e s'/^Exec=\/usr\/sbin\//Exec=\/usr\/bin\//g' -e s'/^Exec=\/usr\/games\//Exec=\/usr\/bin\//g' -e s'/^Exec=\/usr\/local\/bin\//Exec=\/usr\/bin\//g' -e s'/^Exec=\/usr\/local\/sbin\//Exec=\/usr\/bin\//g' -e s'/^Exec=\/usr\/local\/games\//Exec=\/usr\/bin\//g' "$line" 2> /dev/null
+# 	done
+# fi
+ if [[ $pseudo != set ]]; then
+ 	if [[ -e lib ]]; then
+ 		mkdir -p usr/lib 2> /dev/null; mv lib/* usr/lib; rm -rf lib
+ 	fi
+ 	if [[ -e lib32 ]]; then
+ 		if [[ $(grep -i ^Architecture: control | grep -q i386; echo $?) == 0 ]]; then
+ 			mkdir -p usr/lib 2> /dev/null; mv lib32/* usr/lib; rm -rf lib32
+ 		else
+ 			mkdir -p usr/lib32 2> /dev/null; mv lib32/* usr/lib32; rm -rf lib32
+ 		fi
+ 	fi
+ 	if [[ -e lib64 ]]; then
+ 		mkdir -p usr/lib 2> /dev/null; mv lib64/* usr/lib; rm -rf lib64
+ 	fi
+ 	if [[ -e usr/lib32 ]] && [[ $(grep -i ^Architecture: control | grep -q i386; echo $?) == 0 ]]; then
+ 		mkdir usr/lib 2> /dev/null; mv usr/lib32/* usr/lib; rm -rf usr/lib32
+ 	fi
+ 	if [[ -e usr/lib64 ]]; then
+ 		mkdir usr/lib 2> /dev/null; mv usr/lib64/* usr/lib; rm -rf usr/lib64
+ 	fi
+ 	if [[ -e usr/local/lib32 ]] && [[ $(grep -i ^Architecture: control | grep -q i386; echo $?) == 0 ]]; then
+ 		mkdir usr/local/lib 2> /dev/null; mv usr/local/lib32/* usr/local/lib; rm -rf usr/local/lib32
+ 	fi
+ 	if [[ -e usr/local/lib64 ]]; then
+ 		mkdir usr/local/lib 2> /dev/null; mv usr/local/lib64/* usr/local/lib; rm -rf usr/local/lib64
+ 	fi
+ else
+ 	if [[ -e lib ]]; then
+ 		mkdir -p usr/lib32 2> /dev/null; mv lib/* usr/lib32; rm -rf lib
+ 	fi
+ 	if [[ -e lib32 ]]; then
+ 		mkdir -p usr/lib32 2> /dev/null; mv lib32/* usr/lib32; rm -rf lib32
+ 	fi
+ 	if [[ -e usr/lib ]]; then
+ 		mkdir usr/lib32 2> /dev/null; mv usr/lib/* usr/lib32; rm -rf usr/lib
+ 	fi
+ 	if [[ -e usr/local/lib ]]; then
+ 		mkdir usr/local/lib32 2> /dev/null; mv usr/local/lib/* usr/local/lib32; rm -rf usr/local/lib
+ 	fi
+ fi 
+# if [[ $pkgbuild == set ]] || [[ $Pkgbuild == set ]]; then
+# 	if [[ -e usr/local ]] && [[ ! $(ls -A usr/local 2> /dev/null) ]]; then
+# 		echo 'rm -rf usr/local' >> pkgbuildinstallations2
+# 	fi
+# fi
+# 
+# if [[ -e usr/local ]] && [[ ! $(ls -A usr/local 2> /dev/null) ]]; then
+# 	rm -rf usr/local
+# fi
 
 # Generating .PKGINFO file
 echo -e "${lightgreen}==>${NC} ${bold}Generating .PKGINFO file...${normal}"
@@ -439,7 +438,7 @@ echo "builddate = `date -u "+%s"`" >> .PKGINFO
 
 # Generating packager field
 if [[ $quiet == set ]] || [[ $Quiet == set ]]; then
-    echo "packager = Unknown Packager" >> .PKGINFO
+    echo "packager = Converted by debtap-mod" >> .PKGINFO
 else
     source /usr/share/makepkg/util/config.sh
     load_makepkg_config
@@ -525,122 +524,122 @@ echo -e "\n${lightgreen}***${NC} ${bold}Creation of .PKGINFO file in progress. I
 # The packages names translator function
 packages-names-translator() {
 # First method of translating .deb packages names into Arch Linux packages names, more accurate, comparing contents of .deb packages with Arch Linux packages contents
-for debian_package_name in $(gawk '{print $1}' `ls | grep initial-check-list`); do
-	for debian_package_file in `grep "\/$debian_package_name$" /var/cache/debtap/debian-main-packages-files /var/cache/debtap/debian-non-free-packages-files /var/cache/debtap/debian-contrib-packages-files | grep 'bin\|opt\|\.so' | gawk '{print $1}' | sed s'/\// /g' | gawk '{print $NF}'`; do
-		echo $debian_package_file $(grep "^$debian_package_name$\|^$debian_package_name " `ls | grep initial-check-list` | gawk '{print $2}')
-	done >> $debian_package_name-tempfile03
-done
-
-for i in `ls | grep tempfile03`; do
-    for j in `gawk '{print $1}' $i`; do
-		for k in `pkgfile -q $j`; do
-			echo $k`head -1 $i | gawk '{print $2$3}'`
-		done
-    done >> `echo $i | sed s'/tempfile03/tempfile04/'`
-done
-
-touch tempfile05
-for debian_package_name in $(gawk '{print $1}' `ls | grep initial-check-list`); do
-    grep -q "^$debian_package_name$" tempfile05 || echo $debian_package_name >> tempfile05
-done
-
-for i in $(for j in `cat tempfile05`; do echo $j-tempfile04; done); do
-    k=`sort $i | uniq -c | gawk '{print $1}' | sort -n | tail -1`
-    if [[ $(sort $i | uniq -c | gawk '{print $1}' | sort -n | grep "^$k$" | wc -l) -ge 2 ]]; then
-		for l in `cat $i`; do
-			for m in $(sort $i | uniq -c | gawk '{print $1,$2}' | sort -n | grep "^$k " | gawk '{print $2}'); do
-				echo $l | grep "^$m$"
-			done
-		done | head -1 >> tempfile06
-    elif [[ $(sort $i | uniq -c | gawk '{print $1}' | sort -n | grep "^$k$" | wc -l) -eq 1 ]]; then
-		sort $i | uniq -c | gawk '{print $1,$2}' | sort -n | grep "^$k " | gawk '{print $2}' >> tempfile06
-    else
-		echo >> tempfile06
-    fi
-done
-
-cat tempfile06 | sed s'/=/ = /g' | sed s'/>/ > /g' | sed s'/</ < /g' | sed s'/>  =/>=/g' | sed s'/<  =/<=/g' | sed s'/^lib32-\|-multilib$//g' > tempfile07
-
-cat tempfile07 | while read line; do
-    if [[ $(echo "$line" | wc -w) -eq 0 ]]; then
-		echo >> final-check-list
-    elif [[ $(echo "$line" | wc -w) -eq 1 ]] || [[ $(echo "$line" | wc -w) -eq 3 ]]; then
-		echo "`echo "$line" | gawk '{print $1}'` `echo "$line" | gawk '{print $2}'` `echo "$line" | gawk '{print $3}'`" >> final-check-list
-    elif [[ $(echo "$line" | wc -w) -eq 5 ]]; then
-		echo "`echo "$line" | gawk '{print $1}'` `echo "$line" | gawk '{print $2}'` `echo "$line" | gawk '{print $3}'`" >> final-check-list
-		echo "`echo "$line" | gawk '{print $1}'` `echo "$line" | gawk '{print $4}'` `echo "$line" | gawk '{print $5}'`" >> final-check-list
-    fi
-done
-
-for i in $(eval echo {1..$(cat `ls | grep initial-check-list` | wc -l)}); do
-    if [[ $(sed -n ""$i"{p;q;}" final-check-list | gawk '{print $1}') == "" ]]; then
-		echo $(sed -n ""$i"{p;q;}" `ls | grep initial-check-list`) >> untranslated
-		echo $(sed -n ""$i"{p;q;}" `ls | grep initial-check-list` | gawk '{print $1}') >> untranslated-names-only
-    elif [[ $(echo " $(echo $(grep ^pkgname .PKGINFO | gawk '{print $3}' | sed s'/-svn$\|-git$\|-cvs$\|-bzr$\|-darcs$\|-hg$//'){-svn,-git,-cvs,-bzr,-darcs,-hg,}) " | grep -q " $(sed -n ""$i"{p;q;}" final-check-list | gawk '{print $1}') "; echo $?) == 0 ]]; then
-		echo $(sed -n ""$i"{p;q;}" `ls | grep initial-check-list` | sed s'/ //') >> missing-files
-    fi
-done
+# for debian_package_name in $(gawk '{print $1}' `ls | grep initial-check-list`); do
+# 	for debian_package_file in `grep "\/$debian_package_name$" /var/cache/debtap/debian-main-packages-files /var/cache/debtap/debian-non-free-packages-files /var/cache/debtap/debian-contrib-packages-files | grep 'bin\|opt\|\.so' | gawk '{print $1}' | sed s'/\// /g' | gawk '{print $NF}'`; do
+# 		echo $debian_package_file $(grep "^$debian_package_name$\|^$debian_package_name " `ls | grep initial-check-list` | gawk '{print $2}')
+# 	done >> $debian_package_name-tempfile03
+# done
+# 
+# for i in `ls | grep tempfile03`; do
+#     for j in `gawk '{print $1}' $i`; do
+# 		for k in `pkgfile -q $j`; do
+# 			echo $k`head -1 $i | gawk '{print $2$3}'`
+# 		done
+#     done >> `echo $i | sed s'/tempfile03/tempfile04/'`
+# done
+# 
+# touch tempfile05
+# for debian_package_name in $(gawk '{print $1}' `ls | grep initial-check-list`); do
+#     grep -q "^$debian_package_name$" tempfile05 || echo $debian_package_name >> tempfile05
+# done
+# 
+# for i in $(for j in `cat tempfile05`; do echo $j-tempfile04; done); do
+#     k=`sort $i | uniq -c | gawk '{print $1}' | sort -n | tail -1`
+#     if [[ $(sort $i | uniq -c | gawk '{print $1}' | sort -n | grep "^$k$" | wc -l) -ge 2 ]]; then
+# 		for l in `cat $i`; do
+# 			for m in $(sort $i | uniq -c | gawk '{print $1,$2}' | sort -n | grep "^$k " | gawk '{print $2}'); do
+# 				echo $l | grep "^$m$"
+# 			done
+# 		done | head -1 >> tempfile06
+#     elif [[ $(sort $i | uniq -c | gawk '{print $1}' | sort -n | grep "^$k$" | wc -l) -eq 1 ]]; then
+# 		sort $i | uniq -c | gawk '{print $1,$2}' | sort -n | grep "^$k " | gawk '{print $2}' >> tempfile06
+#     else
+# 		echo >> tempfile06
+#     fi
+# done
+# 
+# cat tempfile06 | sed s'/=/ = /g' | sed s'/>/ > /g' | sed s'/</ < /g' | sed s'/>  =/>=/g' | sed s'/<  =/<=/g' | sed s'/^lib32-\|-multilib$//g' > tempfile07
+# 
+# cat tempfile07 | while read line; do
+#     if [[ $(echo "$line" | wc -w) -eq 0 ]]; then
+# 		echo >> final-check-list
+#     elif [[ $(echo "$line" | wc -w) -eq 1 ]] || [[ $(echo "$line" | wc -w) -eq 3 ]]; then
+# 		echo "`echo "$line" | gawk '{print $1}'` `echo "$line" | gawk '{print $2}'` `echo "$line" | gawk '{print $3}'`" >> final-check-list
+#     elif [[ $(echo "$line" | wc -w) -eq 5 ]]; then
+# 		echo "`echo "$line" | gawk '{print $1}'` `echo "$line" | gawk '{print $2}'` `echo "$line" | gawk '{print $3}'`" >> final-check-list
+# 		echo "`echo "$line" | gawk '{print $1}'` `echo "$line" | gawk '{print $4}'` `echo "$line" | gawk '{print $5}'`" >> final-check-list
+#     fi
+# done
+# 
+# for i in $(eval echo {1..$(cat `ls | grep initial-check-list` | wc -l)}); do
+#     if [[ $(sed -n ""$i"{p;q;}" final-check-list | gawk '{print $1}') == "" ]]; then
+# 		echo $(sed -n ""$i"{p;q;}" `ls | grep initial-check-list`) >> untranslated
+# 		echo $(sed -n ""$i"{p;q;}" `ls | grep initial-check-list` | gawk '{print $1}') >> untranslated-names-only
+#     elif [[ $(echo " $(echo $(grep ^pkgname .PKGINFO | gawk '{print $3}' | sed s'/-svn$\|-git$\|-cvs$\|-bzr$\|-darcs$\|-hg$//'){-svn,-git,-cvs,-bzr,-darcs,-hg,}) " | grep -q " $(sed -n ""$i"{p;q;}" final-check-list | gawk '{print $1}') "; echo $?) == 0 ]]; then
+# 		echo $(sed -n ""$i"{p;q;}" `ls | grep initial-check-list` | sed s'/ //') >> missing-files
+#     fi
+# done
 
 # Second method of translating remaining untranslated .deb packages names into Arch Linux packages names, same as first method, but searches in Ubuntu database for packages contents instead of Debian database
-if [[ -e untranslated-names-only ]]; then
-    for ubuntu_package_name in $(sort -u untranslated-names-only); do
-		for ubuntu_package_file in `grep "\/$ubuntu_package_name$" /var/cache/debtap/ubuntu-packages-files | grep 'bin\|opt\|\.so' | gawk '{print $1}' | sed s'/\// /g' | gawk '{print $NF}'`; do
-			echo $ubuntu_package_file $(grep "^$ubuntu_package_name$\|^$ubuntu_package_name " untranslated | gawk '{print $2}')
-		done >> $ubuntu_package_name-tempfile08
-    done
-
-    for i in `ls | grep tempfile08`; do
-		for j in `gawk '{print $1}' $i`; do
-			for k in `pkgfile -q $j`; do
-				echo $k`head -1 $i | gawk '{print $2$3}'`
-			done
-		done >> `echo $i | sed s'/tempfile08/tempfile09/'`
-    done
-
-    touch tempfile10
-    for ubuntu_package_name in $(sort -u untranslated-names-only); do
-		grep -q "^$ubuntu_package_name$" tempfile10 || echo $ubuntu_package_name >> tempfile10
-    done
-
-    for i in $(for j in `cat tempfile10`; do echo $j-tempfile09; done); do
-		k=`sort $i | uniq -c | gawk '{print $1}' | sort -n | tail -1`
-		if [[ $(sort $i | uniq -c | gawk '{print $1}' | sort -n | grep "^$k$" | wc -l) -ge 2 ]]; then
-			for l in `cat $i`; do
-				for m in $(sort $i | uniq -c | gawk '{print $1,$2}' | sort -n | grep "^$k " | gawk '{print $2}'); do
-					echo $l | grep "^$m$"
-				done
-			done | head -1 >> tempfile11
-		elif [[ $(sort $i | uniq -c | gawk '{print $1}' | sort -n | grep "^$k$" | wc -l) -eq 1 ]]; then
-			sort $i | uniq -c | gawk '{print $1,$2}' | sort -n | grep "^$k " | gawk '{print $2}' >> tempfile11
-		else
-			echo >> tempfile11
-		fi
-    done
-
-    cat tempfile11 | sed s'/=/ = /g' | sed s'/>/ > /g' | sed s'/</ < /g' | sed s'/>  =/>=/g' | sed s'/<  =/<=/g' | sed s'/^lib32-\|-multilib$//g' > tempfile12
-
-    cat tempfile12 | while read line; do
-		if [[ $(echo "$line" | wc -w) -eq 0 ]]; then
-			echo >> final-check-list
-		elif [[ $(echo "$line" | wc -w) -eq 1 ]] || [[ $(echo "$line" | wc -w) -eq 3 ]]; then
-			echo "`echo "$line" | gawk '{print $1}'` `echo "$line" | gawk '{print $2}'` `echo "$line" | gawk '{print $3}'`" >> final-check-list
-		elif [[ $(echo "$line" | wc -w) -eq 5 ]]; then
-			echo "`echo "$line" | gawk '{print $1}'` `echo "$line" | gawk '{print $2}'` `echo "$line" | gawk '{print $3}'`" >> final-check-list
-			echo "`echo "$line" | gawk '{print $1}'` `echo "$line" | gawk '{print $4}'` `echo "$line" | gawk '{print $5}'`" >> final-check-list
-		fi
-    done
-
-    for i in $(eval echo {1..$(cat untranslated | wc -l)}); do
-		if [[ $(tac final-check-list | sed -n ""$i"{p;q;}" | gawk '{print $1}') == "" ]]; then
-			echo $(tac untranslated | sed -n ""$i"{p;q;}") >> new-untranslated
-			echo $(tac untranslated | sed -n ""$i"{p;q;}" | gawk '{print $1}') >> new-untranslated-names-only
-		elif [[ $(echo " $(echo $(grep ^pkgname .PKGINFO | gawk '{print $3}' | sed s'/-svn$\|-git$\|-cvs$\|-bzr$\|-darcs$\|-hg$//'){-svn,-git,-cvs,-bzr,-darcs,-hg,}) " | grep -q " $(tac final-check-list | sed -n ""$i"{p;q;}" | gawk '{print $1}') "; echo $?) == 0 ]]; then
-			echo $(tac untranslated | sed -n ""$i"{p;q;}" | sed s'/ //') >> missing-files
-		fi
-    done
-
-    rm -rf untranslated untranslated-names-only
-fi
+# if [[ -e untranslated-names-only ]]; then
+#     for ubuntu_package_name in $(sort -u untranslated-names-only); do
+# 		for ubuntu_package_file in `grep "\/$ubuntu_package_name$" /var/cache/debtap/ubuntu-packages-files | grep 'bin\|opt\|\.so' | gawk '{print $1}' | sed s'/\// /g' | gawk '{print $NF}'`; do
+# 			echo $ubuntu_package_file $(grep "^$ubuntu_package_name$\|^$ubuntu_package_name " untranslated | gawk '{print $2}')
+# 		done >> $ubuntu_package_name-tempfile08
+#     done
+# 
+#     for i in `ls | grep tempfile08`; do
+# 		for j in `gawk '{print $1}' $i`; do
+# 			for k in `pkgfile -q $j`; do
+# 				echo $k`head -1 $i | gawk '{print $2$3}'`
+# 			done
+# 		done >> `echo $i | sed s'/tempfile08/tempfile09/'`
+#     done
+# 
+#     touch tempfile10
+#     for ubuntu_package_name in $(sort -u untranslated-names-only); do
+# 		grep -q "^$ubuntu_package_name$" tempfile10 || echo $ubuntu_package_name >> tempfile10
+#     done
+# 
+#     for i in $(for j in `cat tempfile10`; do echo $j-tempfile09; done); do
+# 		k=`sort $i | uniq -c | gawk '{print $1}' | sort -n | tail -1`
+# 		if [[ $(sort $i | uniq -c | gawk '{print $1}' | sort -n | grep "^$k$" | wc -l) -ge 2 ]]; then
+# 			for l in `cat $i`; do
+# 				for m in $(sort $i | uniq -c | gawk '{print $1,$2}' | sort -n | grep "^$k " | gawk '{print $2}'); do
+# 					echo $l | grep "^$m$"
+# 				done
+# 			done | head -1 >> tempfile11
+# 		elif [[ $(sort $i | uniq -c | gawk '{print $1}' | sort -n | grep "^$k$" | wc -l) -eq 1 ]]; then
+# 			sort $i | uniq -c | gawk '{print $1,$2}' | sort -n | grep "^$k " | gawk '{print $2}' >> tempfile11
+# 		else
+# 			echo >> tempfile11
+# 		fi
+#     done
+# 
+#     cat tempfile11 | sed s'/=/ = /g' | sed s'/>/ > /g' | sed s'/</ < /g' | sed s'/>  =/>=/g' | sed s'/<  =/<=/g' | sed s'/^lib32-\|-multilib$//g' > tempfile12
+# 
+#     cat tempfile12 | while read line; do
+# 		if [[ $(echo "$line" | wc -w) -eq 0 ]]; then
+# 			echo >> final-check-list
+# 		elif [[ $(echo "$line" | wc -w) -eq 1 ]] || [[ $(echo "$line" | wc -w) -eq 3 ]]; then
+# 			echo "`echo "$line" | gawk '{print $1}'` `echo "$line" | gawk '{print $2}'` `echo "$line" | gawk '{print $3}'`" >> final-check-list
+# 		elif [[ $(echo "$line" | wc -w) -eq 5 ]]; then
+# 			echo "`echo "$line" | gawk '{print $1}'` `echo "$line" | gawk '{print $2}'` `echo "$line" | gawk '{print $3}'`" >> final-check-list
+# 			echo "`echo "$line" | gawk '{print $1}'` `echo "$line" | gawk '{print $4}'` `echo "$line" | gawk '{print $5}'`" >> final-check-list
+# 		fi
+#     done
+# 
+#     for i in $(eval echo {1..$(cat untranslated | wc -l)}); do
+# 		if [[ $(tac final-check-list | sed -n ""$i"{p;q;}" | gawk '{print $1}') == "" ]]; then
+# 			echo $(tac untranslated | sed -n ""$i"{p;q;}") >> new-untranslated
+# 			echo $(tac untranslated | sed -n ""$i"{p;q;}" | gawk '{print $1}') >> new-untranslated-names-only
+# 		elif [[ $(echo " $(echo $(grep ^pkgname .PKGINFO | gawk '{print $3}' | sed s'/-svn$\|-git$\|-cvs$\|-bzr$\|-darcs$\|-hg$//'){-svn,-git,-cvs,-bzr,-darcs,-hg,}) " | grep -q " $(tac final-check-list | sed -n ""$i"{p;q;}" | gawk '{print $1}') "; echo $?) == 0 ]]; then
+# 			echo $(tac untranslated | sed -n ""$i"{p;q;}" | sed s'/ //') >> missing-files
+# 		fi
+#     done
+# 
+#     rm -rf untranslated untranslated-names-only
+# fi
 
 # Third method of translating remaining untranslated .deb packages names into Arch Linux packages names, less accurate, comparing .deb packages names with Arch Linux packages names
 if [[ -e new-untranslated-names-only ]]; then
@@ -2682,7 +2681,7 @@ grep -v "^$" final-check-list | while read line; do
 done
 
 # Special rules for version control systems
-cat tempfile13 | while read line; do
+cat tempfile13 2> /dev/null | while read line; do
     for i in {git,bzr,darcs,hg}; do
 		if [[ $(echo "$line" | gawk '{print $3}' | grep -q $i; echo $?) == 0 ]]; then
 			echo "$(echo `echo "$line" | gawk '{print $1}'`-$i | sed s"/-$i-$i$/-$i/") `echo "$line" | gawk '{print $2}'` `echo "$line" | gawk '{print $3}' | gawk -F "$i" '{print $2}' | gawk -F '-' '{print $1}'`" >> tempfile14
@@ -2707,10 +2706,10 @@ cat tempfile13 | while read line; do
 done
 
 if [[ $pseudo != set ]]; then
-	mv tempfile14 tempfile15
+	mv tempfile14 tempfile15 2> /dev/null
 else
 	# Special rules for multilib packages
-	cat tempfile14 | while read line; do
+	cat tempfile14 2> /dev/null | while read line; do
 		i=$(echo "$line" | gawk '{print $1}')
 		pacman -Ssq "lib32-$i" > result
 		grep -q "^lib32-$i$" result /var/cache/debtap/aur-packages && echo "$line" | sed s"/^$i/lib32-$i/" >> tempfile15
@@ -2721,12 +2720,12 @@ fi
 
 # Special rules for non optional dependencies
 if [[ -e dependencies-initial-check-list ]]; then
-    grep -q qt tempfile15 && echo hicolor-icon-theme >> tempfile15
-    grep -q gtk tempfile15 && echo -e "hicolor-icon-theme\ndesktop-file-utils" >> tempfile15
+    grep -q qt tempfile15 2> /dev/null && echo hicolor-icon-theme >> tempfile15
+    grep -q gtk tempfile15 2> /dev/null && echo -e "hicolor-icon-theme\ndesktop-file-utils" >> tempfile15
     grep -q ^Python-Version: control && echo python`grep ^Python-Version: control | gawk '{print $2}' | sed s'/\.//g'` >> tempfile15
 	# Fourth method of finding packages names exclusively for non-optional dependencies (accurate)
 	for i in $(readelf -d $(find ./ -executable -type f) 2> /dev/null | grep NEEDED | gawk '{print $5}' | sort -u | sed s'/\[\|\]//g'); do
-		pkgfile -q "$i" | head -1 >> tempfile15
+		pkgfile -q "$i" 2>/dev/null | head -1 >> tempfile15
 	done
 	# Removing packages names that are part of base group (if any exist)
 	touch tempfile15-1
@@ -2735,11 +2734,11 @@ if [[ -e dependencies-initial-check-list ]]; then
 			echo "$line" >> tempfile15-1
 		fi
 	done
-	mv tempfile15-1 tempfile15
+	mv tempfile15-1 tempfile15 2> /dev/null 
 fi
 
 # Sorting packages names and versions
-sort -u tempfile15 > tempfile16
+sort -u tempfile15 > tempfile16 2> /dev/null
 
 # Sorting only packages names
 gawk '{print $1}' tempfile16 | sort -u > tempfile17
@@ -2802,7 +2801,7 @@ if [[ $(grep -q ^Replaces: control; echo $?) == 0 ]]; then
 			echo $word >> tempfile01
 		done
     done
-    sed -e s'/(/ /g' -e s'/)//g' tempfile01 | sort > tempfile02
+    sed -e s'/(/ /g' -e s'/)//g' tempfile01 2> /dev/null | sort > tempfile02
     grep -v '^xlibs$\|^xlibs \|^libgl1$\|^libgl1 \|^libglu1$\|^libglu1 \|^default-jre$\|^default-jre \|^openjdk-[0-9]+-[jdk|jre]\|^libstdc[0-9]+$\|^libstdc[0-9]+ \|^qt[0-9]+-default$\|^qt[0-9]+-default \|^python:any$\|^python:any \|^libpango\|^libcupsys2$\|^libcupsys2 \|^jackd[0-9]*$\|^jackd[0-9]* \|^fonts-freefont-ttf$\|^fonts-freefont-ttf \|^fonts-liberation$\|^fonts-liberation \|^ttf-mscorefonts-installer$\|^ttf-mscorefonts-installer \|^dpkg$\|^dpkg \|^apt$\|^apt \|^apt-get$\|^apt-get \|^aptitude$\|^aptitude \|^debconf' tempfile02 > replacements-initial-check-list
     packages-names-translator
 	if [[ $wipeout != set ]]; then
@@ -2838,7 +2837,7 @@ if [[ $(grep -q ^Provides: control; echo $?) == 0 ]]; then
 			echo $word >> tempfile01
 		done
     done
-    sed -e s'/(/ /g' -e s'/)//g' tempfile01 | sort > tempfile02
+    sed -e s'/(/ /g' -e s'/)//g' tempfile01 2> /dev/null | sort > tempfile02
     grep -v 'xlibs$\|^xlibs \|^libgl1$\|^libgl1 \|^libglu1$\|^libglu1 \|^default-jre$\|^default-jre \|^openjdk-[0-9]+-[jdk|jre]\|^libstdc[0-9]+$\|^libstdc[0-9]+ \|^qt[0-9]+-default$\|^qt[0-9]+-default \|^python:any$\|^python:any \|^libpango\|^libcupsys2$\|^libcupsys2 \|^jackd[0-9]*$\|^jackd[0-9]* \|^fonts-freefont-ttf$\|^fonts-freefont-ttf \|^fonts-liberation$\|^fonts-liberation \|^ttf-mscorefonts-installer$\|^ttf-mscorefonts-installer \|^dpkg$\|^dpkg \|^apt$\|^apt \|^apt-get$\|^apt-get \|^aptitude$\|^aptitude \|^debconf' tempfile02 > provisions-initial-check-list
     packages-names-translator
 	if [[ $wipeout != set ]] && [[ $pkgbuild != set ]] && [[ $Pkgbuild != set ]]; then
@@ -2872,14 +2871,14 @@ if [[ $(grep -q '^Depends:\|^Pre-Depends:' control; echo $?) == 0 ]]; then
 			echo $word >> tempfile01
 		done
     done
-    sed -e s'/(/ /g' -e s'/)//g' tempfile01 | sort > tempfile02
+    sed -e s'/(/ /g' -e s'/)//g' tempfile01 2> /dev/null | sort > tempfile02
     grep -v 'xlibs$\|^xlibs \|^libgl1$\|^libgl1 \|^libglu1$\|^libglu1 \|^default-jre$\|^default-jre \|^openjdk-[0-9]+-[jdk|jre]\|^libstdc[0-9]+$\|^libstdc[0-9]+ \|^qt[0-9]+-default$\|^qt[0-9]+-default \|^python:any$\|^python:any \|^libpango\|^libcupsys2$\|^libcupsys2 \|^jackd[0-9]*$\|^jackd[0-9]* \|^fonts-freefont-ttf$\|^fonts-freefont-ttf \|^fonts-liberation$\|^fonts-liberation \|^ttf-mscorefonts-installer$\|^ttf-mscorefonts-installer \|^dpkg$\|^dpkg \|^apt$\|^apt \|^apt-get$\|^apt-get \|^aptitude$\|^aptitude \|^debconf' tempfile02 > dependencies-initial-check-list
     packages-names-translator
-	if [[ $wipeout != set ]]; then
-		for i in `sort -u tempfile22`; do echo "depend = $i" >> .PKGINFO; done
-	else
-		for i in `sort -u tempfile18`; do echo "depend = $i" >> .PKGINFO; done
-	fi
+# 	if [[ $wipeout != set ]]; then
+# 		for i in `sort -u tempfile22`; do echo "depend = $i" >> .PKGINFO; done
+# 	else
+# 		for i in `sort -u tempfile18`; do echo "depend = $i" >> .PKGINFO; done
+# 	fi
 	rm -rf *tempfile* dependencies-initial-check-list final-check-list
 fi
 
@@ -2890,7 +2889,7 @@ if [[ $(grep -q '^Recommends:\|^Suggests:' control; echo $?) == 0 ]]; then
 			echo $word >> tempfile01
 		done
     done
-    sed -e s'/(/ /g' -e s'/)//g' tempfile01 | sort > tempfile02
+    sed -e s'/(/ /g' -e s'/)//g' tempfile01 2> /dev/null | sort > tempfile02
     grep -v 'xlibs$\|^xlibs \|^libgl1$\|^libgl1 \|^libglu1$\|^libglu1 \|^default-jre$\|^default-jre \|^openjdk-[0-9]+-[jdk|jre]\|^libstdc[0-9]+$\|^libstdc[0-9]+ \|^qt[0-9]+-default$\|^qt[0-9]+-default \|^python:any$\|^python:any \|^libpango\|^libcupsys2$\|^libcupsys2 \|^jackd[0-9]*$\|^jackd[0-9]* \|^fonts-freefont-ttf$\|^fonts-freefont-ttf \|^fonts-liberation$\|^fonts-liberation \|^ttf-mscorefonts-installer$\|^ttf-mscorefonts-installer \|^dpkg$\|^dpkg \|^apt$\|^apt \|^apt-get$\|^apt-get \|^aptitude$\|^aptitude \|^debconf' tempfile02 > optional-dependencies-initial-check-list
     packages-names-translator
 	if [[ $wipeout != set ]]; then
@@ -2970,6 +2969,7 @@ echo -e "\n${lightgreen}==>${NC} ${bold}Checking and generating .INSTALL file (i
 
 SAVEIFS=$IFS
 IFS=$'\n'
+pkgname="$(grep -i ^Package: control | gawk '{print $2}' | tr '[:upper:]' '[:lower:]')"
 echo "pre_install() {" > tempfile1
 if [[ -e preinst ]]; then
 	sed -i -e '/how this script works/,/debian-policy/d' -e '/how this script works/,/version>/d' -e '/dh_installdeb/,/DEBHELPER/d' preinst
@@ -2978,11 +2978,19 @@ if [[ -e preinst ]]; then
 		sed -i -e '/[[:blank:]]\{0,\}update-alternatives.*)/,/esac/d' -e '/[[:blank:]]\{0,\}db_.*)/,/esac/d' -e '/[[:blank:]]\{0,\}db_.*)/,/update-alternatives/d' -e '/[[:blank:]]\{0,\}lintian.*/,/}/d' -e '/[[:blank:]]\{0,\}if.*update-app-install.*/,/fi/d' -e '/[[:blank:]]\{0,\}if.*update-software-center.*/,/fi/d' -e '/[[:blank:]]\{0,\}if.*RET.*/,/fi/d' -e '/.*\*)[[:blank:]]\{0,\}/,/esac/d' preinst
 		sed -i -e '/.*upgrade.*)[[:blank:]]\{0,\}$/d' -e '/.*install.*)[[:blank:]]\{0,\}$/d' -e '/^[[:blank:]]\{0,\};;[[:blank:]]\{0,\}$/d' -e '/^[[:blank:]]\{0,\}exit 0[[:blank:]]\{0,\}$/d' -e '/^[[:blank:]]\{0,\}exit[[:blank:]]\{0,\}$/d' preinst
 		sed -i -e s'/.*\*)[[:blank:]]{0,\}\(.*\)/\1/g' -e s'/.*upgrade.*)[[:blank:]]\{0,\}\(.*\)$/\1/g' -e s'/.*install.*)[[:blank:]]\{0,\}\(.*\)$/\1/g' -e s'/^[[:blank:]]\{0,\};;[[:blank:]]\{0,\}\(.*\)$/\1/g' -e s'/^\(.*\)[[:blank:]]\{0,\}\(; \)\{0,1\}\( && \)\{0,1\}[[:blank:]]\{0,\}exit 0[[:blank:]]\{0,\}$/\1/g' -e s'/^\(.*\)[[:blank:]]\{0,\}\(; \)\{0,1\}\( && \)\{0,1\}[[:blank:]]\{0,\}exit[[:blank:]]\{0,\}$/\1/g' preinst
+
+#         mkdir -p usr/share/deb-pkg-files/${pkgname}
+#         cp -f preinst usr/share/deb-pkg-files/${pkgname}/preinst
+#         chmod +x usr/share/deb-pkg-files/${pkgname}/preinst
+# 
+#         echo "/usr/share/deb-pkg-files/${pkgname}/preinst install 2> /dev/null" >> tempfile1
+#         echo "/usr/share/deb-pkg-files/${pkgname}/preinst configure 2> /dev/null" >> tempfile1
 	fi
-	grep -iv '#!\|set -e\|automatically\|added\|generated\|apt \|apt-get \|aptitude \|debian-policy\|debconf\|dh_installdeb\|debhelper\|preinst\|postinst\|prerm\|postrm\|abort\|update-alternatives\|--slave\|db_\|remove_source\|update_manager\|lintian' preinst | while read -r line; do
-	printf '\t%s\n' "$line" >> tempfile1
-	done
+ 	grep -iv '#!\|set -e\|automatically\|added\|generated\|apt \|apt-get \|aptitude \|debian-policy\|debconf\|dh_installdeb\|debhelper\|preinst\|postinst\|prerm\|postrm\|abort\|update-alternatives\|--slave\|db_\|remove_source\|update_manager\|lintian' preinst | while read -r line; do
+ 	printf '\t%s\n' "$line" >> tempfile1
+ 	done
 fi
+
 echo "}" >> tempfile1
 if [[ $(echo $(($(grep "[[:blank:]]" -o tempfile1 | wc -l) + 15))) != $(echo $(($(wc -c < tempfile1) - $(wc -l < tempfile1)))) ]]; then
 	cat tempfile1 >> tempfile2
@@ -2995,16 +3003,12 @@ elif [[ $(grep '^depend' .PKGINFO | grep -q gtk; echo $?) == 0 ]]; then
 	echo -e '\tgtk-update-icon-cache -q -t -f usr/share/icons/hicolor' >> tempfile1
 fi
 if [[ -e postinst ]]; then
-	sed -i -e '/how this script works/,/debian-policy/d' -e '/how this script works/,/version>/d' -e '/dh_installdeb/,/DEBHELPER/d' postinst
-	if [[ $(grep -c "case in \$1\|case in \${1}\|case in \"\$1\"\|case in \"\${1}\"\|case \$1 in\|case \${1} in\|case \"\$1\" in\|case \"\${1}\" in" postinst) == $(grep -c "case " postinst) ]]; then
-		sed -i -e '/case in \$1/,/configure/{/configure/!d}' -e '/case in \${1}/,/configure/{/,configure/!d}' -e '/case in "\$1"/,/configure/{/configure/!d}' -e '/case in "\${1}"/,/configure/{/,configure/!d}' -e '/case \$1 in/,/configure/{/configure/!d}' -e '/case \${1} in/,/configure/{/,configure/!d}' -e '/case in "\$1"/,/configure/{/configure/!d}' -e '/case "\${1}" in/,/configure/{/,configure/!d}' -e '/case in \$1/,/update-alternatives/{/update-alternatives/!d}' -e '/case in {1}/,/update-alternatives/{/update-alternatives/!d}' -e '/case in "\$1"/,/update-alternatives/{/update-alternatives/!d}' -e '/case in "{1}"/,/update-alternatives/{/update-alternatives/!d}' -e '/case \$1 in/,/update-alternatives/{/update-alternatives/!d}' -e '/case {1} in/,/update-alternatives/{/update-alternatives/!d}' -e '/case "\$1" in/,/update-alternatives/{/update-alternatives/!d}' -e '/case "{1}" in/,/update-alternatives/{/update-alternatives/!d}' -e '/case in \$1/,/db_/{/db_/!d}' -e '/case in {1}/,/db_/{/db_/!d}' -e '/case in "\$1"/,/db_/{/db_/!d}' -e '/case in "{1}"/,/db_/{/db_/!d}' -e '/case \$1 in/,/db_/{/db_/!d}' -e '/case {1} in/,/db_/{/db_/!d}' -e '/case "\$1" in/,/db_/{/db_/!d}' -e '/case "{1}" in/,/db_/{/db_/!d}' -e '/;;/,/esac/{/;;/!d}' postinst
-		sed -i -e '/[[:blank:]]\{0,\}update-alternatives.*)/,/esac/d' -e '/[[:blank:]]\{0,\}db_.*)/,/esac/d' -e '/[[:blank:]]\{0,\}db_.*)/,/update-alternatives/d' -e '/[[:blank:]]\{0,\}lintian.*/,/}/d' -e '/[[:blank:]]\{0,\}if.*update-app-install.*/,/fi/d' -e '/[[:blank:]]\{0,\}if.*update-software-center.*/,/fi/d' -e '/[[:blank:]]\{0,\}if.*RET.*/,/fi/d' -e '/.*\*)[[:blank:]]\{0,\}/,/esac/d' postinst
-		sed -i -e '/.*configure.*)[[:blank:]]\{0,\}$/d' -e '/^[[:blank:]]\{0,\};;[[:blank:]]\{0,\}$/d' -e '/^[[:blank:]]\{0,\}exit 0[[:blank:]]\{0,\}$/d' -e '/^[[:blank:]]\{0,\}exit[[:blank:]]\{0,\}$/d' postinst
-		sed -i -e s'/.*\*)[[:blank:]]{0,\}\(.*\)/\1/g' -e s'/.*configure.*)[[:blank:]]\{0,\}\(.*\)$/\1/g' -e s'/^[[:blank:]]\{0,\};;[[:blank:]]\{0,\}\(.*\)$/\1/g' -e s'/^\(.*\)[[:blank:]]\{0,\}\(; \)\{0,1\}\( && \)\{0,1\}[[:blank:]]\{0,\}exit 0[[:blank:]]\{0,\}$/\1/g' -e s'/^\(.*\)[[:blank:]]\{0,\}\(; \)\{0,1\}\( && \)\{0,1\}[[:blank:]]\{0,\}exit[[:blank:]]\{0,\}$/\1/g' postinst
-	fi
-	grep -iv '#!\|set -e\|automatically\|added\|generated\|apt \|apt-get \|aptitude \|debian-policy\|debconf\|dh_installdeb\|debhelper\|preinst\|postinst\|prerm\|postrm\|abort\|update-alternative\|--slave\|db_\|remove_source\|update_manager\|lintian' postinst | while read -r line; do
-		printf '\t%s\n' "$line" >> tempfile1
-	done
+    mkdir -p usr/share/deb-pkg-files/${pkgname}
+    cp -f postinst usr/share/deb-pkg-files/${pkgname}/postinst
+    chmod +x usr/share/deb-pkg-files/${pkgname}/postinst
+
+    echo "/usr/share/deb-pkg-files/${pkgname}/postinst install 2> /dev/null" >> tempfile1
+    echo "/usr/share/deb-pkg-files/${pkgname}/postinst configure 2> /dev/null" >> tempfile1
 fi
 if [[ $(grep '^depend' .PKGINFO | grep -q 'qt\|gtk'; echo $?) == 0 ]]; then
 	echo -e '\tupdate-desktop-database -q' >> tempfile1
@@ -3016,28 +3020,57 @@ fi
 
 if [[ $(grep -q '^pre_install() {$' tempfile2 2> /dev/null; echo $?) == 0 ]]; then
 	echo -e "\npre_upgrade() {" >> tempfile2
-	echo -e "\tpre_install" >> tempfile2
+    mkdir -p usr/share/deb-pkg-files/${pkgname}
+    cp -f preinst usr/share/deb-pkg-files/${pkgname}/preinst
+    chmod +x usr/share/deb-pkg-files/${pkgname}/preinst
+	echo "/usr/share/deb-pkg-files/${pkgname}/preinst upgrade 2> /dev/null" >> tempfile2	
 	echo "}" >> tempfile2
 fi
 
+
+
+#     #Remove aarch depends
+#     sed -i '/depend = aarch/d' .PKGINFO
+# 
+#     #Fix python-pathlib depends
+#     sed -i 's|depend = python-pathlib|depend = python2-pathlib|g' .PKGINFO  
+# 
+#     #Fix python-pathlib depends
+#     sed -i 's|depend = python-pathlib|depend = python2-pathlib|g' .PKGINFO 
+# 
+#     #Not usa cuda as depends
+#     sed -i '/depend = cuda-tools/d' .PKGINFO
+
+
 if [[ $(grep -q '^post_install() {$' tempfile2 2> /dev/null; echo $?) == 0 ]]; then
 	echo -e "\npost_upgrade() {" >> tempfile2
-	echo -e "\tpost_install" >> tempfile2
+	echo "/usr/share/deb-pkg-files/${pkgname}/postinst upgrade 2> /dev/null" >> tempfile2
+
+	#Fix to pjeoffice
+    if [[ "${pkgname}" == "pje-office" ]]; then
+        echo '' >> usr/share/deb-pkg-files/pje-office/postinst
+        echo 'echo "#!/bin/bash" > /usr/bin/pjeOffice' >> usr/share/deb-pkg-files/pje-office/postinst
+        echo 'echo "/usr/share/pje-office/pjeOffice.sh /usr/share/pje-office/pjeOffice.jar" >> /usr/bin/pjeOffice' >> usr/share/deb-pkg-files/pje-office/postinst
+        echo 'chmod +x /usr/bin/pjeOffice'  >> usr/share/deb-pkg-files/pje-office/postinst
+        sed -i '/depend =/d' .PKGINFO
+    fi
+    
+	#Fix to bricscad
+    if [[ "$(echo "${pkgname}" | grep bricscad)" != "" ]]; then
+        echo 'chmod 777 -R /var/bricsys' >> usr/share/deb-pkg-files/${pkgname}/postinst
+    fi
+  
 	echo "}" >> tempfile2
 fi
 
 echo -e "\npre_remove() {" > tempfile1
 if [[ -e prerm ]]; then
-	sed -i -e '/how this script works/,/debian-policy/d' -e '/how this script works/,/version>/d' -e '/dh_installdeb/,/DEBHELPER/d' prerm
-	if [[ $(grep -c "case in \$1\|case in \${1}\|case in \"\$1\"\|case in \"\${1}\"\|case \$1 in\|case \${1} in\|case \"\$1\" in\|case \"\${1}\" in" prerm) == $(grep -c "case " prerm) ]]; then
-		sed -i -e '/case in \$1/,/remove/{/remove/!d}' -e '/case in {1}/,/remove/{/remove/!d}' -e '/case in "\$1"/,/remove/{/remove/!d}' -e '/case in "{1}"/,/remove/{/remove/!d}' -e '/case \$1 in/,/remove/{/remove/!d}' -e '/case {1} in/,/remove/{/remove/!d}' -e '/case "\$1" in/,/remove/{/remove/!d}' -e '/case "{1}" in/,/remove/{/remove/!d}' -e '/case in \$1/,/upgrade/{/upgrade/!d}' -e '/case in \${1}/,/upgrade/{/upgrade/!d}' -e '/case in "\$1"/,/upgrade/{/upgrade/!d}' -e '/case in "\${1}"/,/upgrade/{/upgrade/!d}' -e '/case \$1 in/,/upgrade/{/upgrade/!d}' -e '/case \${1} in/,/upgrade/{/upgrade/!d}' -e '/case "\$1" in/,/upgrade/{/upgrade/!d}' -e '/case "\${1}" in/,/upgrade/{/upgrade/!d}' -e '/case in \$1/,/update-alternatives/{/update-alternatives/!d}' -e '/case in {1}/,/update-alternatives/{/update-alternatives/!d}' -e '/case in "\$1"/,/update-alternatives/{/update-alternatives/!d}' -e '/case in "{1}"/,/update-alternatives/{/update-alternatives/!d}' -e '/case \$1 in/,/update-alternatives/{/update-alternatives/!d}' -e '/case {1} in/,/update-alternatives/{/update-alternatives/!d}' -e '/case "\$1" in/,/update-alternatives/{/update-alternatives/!d}' -e '/case "{1}" in/,/update-alternatives/{/update-alternatives/!d}' -e '/case in \$1/,/db_/{/db_/!d}' -e '/case in {1}/,/db_/{/db_/!d}' -e '/case in "\$1"/,/db_/{/db_/!d}' -e '/case in "{1}"/,/db_/{/db_/!d}' -e '/case \$1 in/,/db_/{/db_/!d}' -e '/case {1} in/,/db_/{/db_/!d}' -e '/case "\$1" in/,/db_/{/db_/!d}' -e '/case "{1}" in/,/db_/{/db_/!d}' -e '/;;/,/esac/{/;;/!d}' prerm
-		sed -i -e '/[[:blank:]]\{0,\}update-alternatives.*)/,/esac/d' -e '/[[:blank:]]\{0,\}db_.*)/,/esac/d' -e '/[[:blank:]]\{0,\}db_.*)/,/update-alternatives/d' -e '/[[:blank:]]\{0,\}lintian.*/,/}/d' -e '/[[:blank:]]\{0,\}if.*update-app-install.*/,/fi/d' -e '/[[:blank:]]\{0,\}if.*update-software-center.*/,/fi/d' -e '/[[:blank:]]\{0,\}if.*RET.*/,/fi/d' -e '/.*\*)[[:blank:]]\{0,\}/,/esac/d' prerm
-		sed -i -e '/.*remove.*)[[:blank:]]\{0,\}$/d' -e '/.*upgrade.*)[[:blank:]]\{0,\}$/d' -e '/^[[:blank:]]\{0,\};;[[:blank:]]\{0,\}$/d' -e '/^[[:blank:]]\{0,\}exit 0[[:blank:]]\{0,\}$/d' -e '/^[[:blank:]]\{0,\}exit[[:blank:]]\{0,\}$/d' prerm
-		sed -i -e s'/.*\*)[[:blank:]]{0,\}\(.*\)/\1/g' -e s'/.*remove.*)[[:blank:]]\{0,\}\(.*\)$/\1/g' -e s'/.*upgrade.*)[[:blank:]]\{0,\}\(.*\)$/\1/g' -e s'/^[[:blank:]]\{0,\};;[[:blank:]]\{0,\}\(.*\)$/\1/g' -e s'/^\(.*\)[[:blank:]]\{0,\}\(; \)\{0,1\}\( && \)\{0,1\}[[:blank:]]\{0,\}exit 0[[:blank:]]\{0,\}$/\1/g' -e s'/^\(.*\)[[:blank:]]\{0,\}\(; \)\{0,1\}\( && \)\{0,1\}[[:blank:]]\{0,\}exit[[:blank:]]\{0,\}$/\1/g' prerm
-	fi
-	grep -iv '#!\|set -e\|automatically\|added\|generated\|apt \|apt-get \|aptitude \|debian-policy\|debconf\|dh_installdeb\|debhelper\|preinst\|postinst\|prerm\|postrm\|abort\|update-alternatives\|--slave\|db_\|remove_source\|update_manager\|lintian' prerm | while read -r line; do
-		printf '\t%s\n' "$line" >> tempfile1
-	done
+    mkdir -p usr/share/deb-pkg-files/${pkgname}
+    cp -f prerm usr/share/deb-pkg-files/${pkgname}/prerm
+    chmod +x usr/share/deb-pkg-files/${pkgname}/prerm
+
+    echo "/usr/share/deb-pkg-files/${pkgname}/prerm remove 2> /dev/null" >> tempfile1
+    echo "/usr/share/deb-pkg-files/${pkgname}/prerm deconfigure 2> /dev/null" >> tempfile1
 fi
 echo "}" >> tempfile1
 if [[ $(echo $(($(grep "[[:blank:]]" -o tempfile1 | wc -l) + 14))) != $(echo $(($(wc -c < tempfile1) - $(wc -l < tempfile1)))) ]]; then
@@ -3057,9 +3090,17 @@ if [[ -e postrm ]]; then
 		sed -i -e '/[[:blank:]]\{0,\}update-alternatives.*)/,/esac/d' -e '/[[:blank:]]\{0,\}db_.*)/,/esac/d' -e '/[[:blank:]]\{0,\}db_.*)/,/update-alternatives/d' -e '/[[:blank:]]\{0,\}lintian.*/,/}/d' -e '/[[:blank:]]\{0,\}if.*update-app-install.*/,/fi/d' -e '/[[:blank:]]\{0,\}if.*update-software-center.*/,/fi/d' -e '/[[:blank:]]\{0,\}if.*RET.*/,/fi/d' -e '/.*\*)[[:blank:]]\{0,\}/,/esac/d' postrm
 		sed -i -e '/.*remove.*)[[:blank:]]\{0,\}$/d' -e '/.*purge.*)[[:blank:]]\{0,\}$/d' -e '/.*upgrade.*)[[:blank:]]\{0,\}$/d' -e '/^[[:blank:]]\{0,\};;[[:blank:]]\{0,\}$/d' -e '/^[[:blank:]]\{0,\}exit 0[[:blank:]]\{0,\}$/d' -e '/^[[:blank:]]\{0,\}exit[[:blank:]]\{0,\}$/d' postrm
 		sed -i -e s'/.*\*)[[:blank:]]{0,\}\(.*\)/\1,/g' -e s'/.*remove.*)[[:blank:]]\{0,\}\(.*\)$/\1/g' -e s'/.*purge.*)[[:blank:]]\{0,\}\(.*\)$/\1/g' -e s'/.*upgrade.*)[[:blank:]]\{0,\}\(.*\)$/\1/g' -e s'/^[[:blank:]]\{0,\};;[[:blank:]]\{0,\}\(.*\)$/\1/g' -e s'/^\(.*\)[[:blank:]]\{0,\}\(; \)\{0,1\}\( && \)\{0,1\}[[:blank:]]\{0,\}exit 0[[:blank:]]\{0,\}$/\1/g' -e s'/^\(.*\)[[:blank:]]\{0,\}\(; \)\{0,1\}\( && \)\{0,1\}[[:blank:]]\{0,\}exit[[:blank:]]\{0,\}$/\1/g' postrm
+
+#         mkdir -p usr/share/deb-pkg-files/${pkgname}
+#         cp -f postrm usr/share/deb-pkg-files/${pkgname}/postrm
+#         chmod +x usr/share/deb-pkg-files/${pkgname}/postrm
+# 
+#         echo "/usr/share/deb-pkg-files/${pkgname}/postrm remove 2> /dev/null" >> tempfile1
+#         echo "/usr/share/deb-pkg-files/${pkgname}/postrm deconfigure 2> /dev/null" >> tempfile1
+
 	fi
-	grep -iv '#!\|set -e\|automatically\|added\|generated\|apt \|apt-get \|aptitude \|debian-policy\|debconf\|dh_installdeb\|debhelper\|preinst\|postinst\|prerm\|postrm\|abort\|update-alternatives\|--slave\|db_\|remove_source\|update_manager\|lintian' postrm | while read -r line; do
-		printf '\t%s\n' "$line" >> tempfile1
+ 	grep -iv '#!\|set -e\|automatically\|added\|generated\|apt \|apt-get \|aptitude \|debian-policy\|debconf\|dh_installdeb\|debhelper\|preinst\|postinst\|prerm\|postrm\|abort\|update-alternatives\|--slave\|db_\|remove_source\|update_manager\|lintian' postrm | while read -r line; do
+ 		printf '\t%s\n' "$line" >> tempfile1
 	done
 fi
 if [[ $(grep '^depend' .PKGINFO | grep -q 'qt\|gtk'; echo $?) == 0 ]]; then
@@ -3115,40 +3156,10 @@ rm -rf tempfile*
 # Removing metadata of original .deb package
 rm -rf control preinst postinst prerm postrm conffiles
 
-# Prompting user for editing .PKGINFO and .INSTALL files
+# Prompting user for editing .INSTALL
 if [[ $Quiet != set ]]; then
-		if [ -e .INSTALL ]; then
-		echo -en "\n${lightblue}::${NC} ${bold}If you want to edit .PKGINFO and .INSTALL files (in this order), press (1) For${normal} ${lightred}vi${NC} ${bold}(2) For${normal} ${lightred}nano${NC} ${bold}(3) For${normal} ${lightred}default editor${NC} ${bold}(4) For${normal} ${lightred}a custom editor${NC} ${bold}or any other key to continue: ${normal}"
-		read -n 1 number
-		if [[ $number == 1 ]]; then
-			echo; vi .PKGINFO; vi .INSTALL
-		elif [[ $number == 2 ]]; then
-			echo; nano .PKGINFO; nano .INSTALL
-		elif [[ $number == 3 ]]; then
-			echo; $EDITOR .PKGINFO 2> /dev/null; $EDITOR .INSTALL 2> /dev/null || echo -e "${red}Error: No default editor has been set or no such command${NC}"
-		elif [[ $number == 4 ]]; then
-			echo -en "\n${lightblue}::${NC} ${bold}Enter command for running custom editor: ${normal}"
-			read custom_editor
-			$custom_editor .PKGINFO 2> /dev/null; $custom_editor .INSTALL 2> /dev/null || echo -e "${red}Error: No command given or no such command${NC}"
-		else
-			echo
-		fi
-    else
-		echo -en "\n${lightblue}::${NC} ${bold}If you want to edit .PKGINFO file, press (1) For${normal} ${lightred}vi${NC} ${bold}(2) For${normal} ${lightred}nano${NC} ${bold}(3) For${normal} ${lightred}default editor${NC} ${bold}(4) For${normal} ${lightred}a custom editor${NC} ${bold}or any other key to continue: ${normal}"
-		read -n 1 number
-		if [[ $number == 1 ]]; then
-			echo; vi .PKGINFO
-		elif [[ $number == 2 ]]; then
-			echo; nano .PKGINFO
-		elif [[ $number == 3 ]]; then
-			echo; $EDITOR .PKGINFO 2> /dev/null || echo -e "${red}Error: No default editor has been set or no such command${NC}"
-		elif [[ $number == 4 ]]; then
-			echo -en "\n${lightblue}::${NC} ${bold}Enter command for running custom editor: ${normal}"
-			read custom_editor
-			$custom_editor .PKGINFO 2> /dev/null || echo -e "${red}Error: No command given or no such command${NC}"
-		else
-			echo
-		fi
+    if [ -e .INSTALL ]; then
+        kate -n .INSTALL
     fi
 fi
 
@@ -3161,10 +3172,80 @@ bsdtar -czf .MTREE --format=mtree --options='!all,use-set,type,uid,gid,mode,time
 if [[ $Pkgbuild != set ]]; then
 echo -e "\n${lightgreen}==>${NC} ${bold}Creating final package...${normal}"
 fakeroot << EOF
-tar --force-local -pcf `grep '^pkgname =' .PKGINFO | gawk '{print $3}'`-`grep '^pkgver =' .PKGINFO | gawk '{print $3}'`-`grep '^arch =' .PKGINFO | gawk '{print $3}'`.pkg.tar --exclude='pkgbuildinstallations*' * .PKGINFO .INSTALL .MTREE 2> /dev/null
-zstd -q -T0 --ultra -20 *.tar
+tar --force-local -pcf "${pkgname}-deb-converted.pkg.tar" --exclude='pkgbuildinstallations*' * .PKGINFO .INSTALL .MTREE 2> /dev/null
+#zstd -q -T0 --ultra -20 *.tar
 EOF
-mv *.zst "$(dirname "$package_with_full_path")"
+# mv *.zst "$(dirname "$package_with_full_path")"
+
+
+# Extract .PKGINFO from tar
+tar -x -f *pkg.tar .PKGINFO
+
+# Fix pje-office
+if [[ "${pkgname}" == "pje-office" ]]; then
+    sed -i '/depend = java-runtime/d' .PKGINFO
+    disable_namcap=y
+    sed -i 's|pkgname = pje-office|pkgname = pje-office-deb|g' .PKGINFO
+fi
+
+# Fix warsaw
+if [[ "${pkgname}" == "warsaw" ]]; then
+    sed -i '/depend = java-runtime/d' .PKGINFO
+    disable_namcap=y
+    sed -i 's|pkgname = warsaw|pkgname = warsaw-deb|g' .PKGINFO
+fi
+
+
+if [ "$disable_namcap" != "y" ]; then
+
+    # Detect depends and add to .PKGINFO
+    namcap -r sodepends -m *.pkg.tar > /tmp/namcap-output-tmp
+
+    # Detect installed depends
+    grep 'dependency-detected-not-included' /tmp/namcap-output-tmp  | awk '{ print $4}' > /tmp/namcap-output-depends-tmp
+
+    # Detect not installed depends
+    grep 'library-no-package-associated' /tmp/namcap-output-tmp  | awk '{ print $4}' > /tmp/namcap-output-libdepends-tmp
+
+    if [ "$(cat /tmp/namcap-output-libdepends-tmp)" != "" ]; then
+
+        LANG=C pamac search -f $(cat /tmp/namcap-output-libdepends-tmp) | grep -v "No package owns" | awk '{print $NF}' | sort -h | uniq | grep -v "dbus-x11" | grep -v "palemoon-bin" | grep -v "gtk2-compatibility" | grep -v "cuda-tools" >> /tmp/namcap-output-depends-tmp
+
+    fi
+
+    for namcapDeps in $(cat /tmp/namcap-output-depends-tmp); do 
+
+        echo "depend = $namcapDeps" >> .PKGINFO
+
+    done
+
+fi
+
+
+# Fix safesignidentityclient
+if [[ "${pkgname}" == "safesignidentityclient" ]]; then
+    echo 'depend = xdg-utils' >> .PKGINFO
+    echo 'depend = libmspack' >> .PKGINFO
+    echo 'depend = ccid' >> .PKGINFO
+    sed -i 's|pkgname = safesignidentityclient|pkgname = safesignidentityclient-deb|g' .PKGINFO
+fi
+
+# Prompting user for editing .PKGINFO
+if [[ $Quiet != set ]]; then
+    kate -n .PKGINFO
+fi
+
+
+# Remove .PKGINFO in tar
+tar --delete -f *pkg.tar .PKGINFO
+
+# Add .PKGINFO in tar
+tar -uf *pkg.tar .PKGINFO
+
+pamac-installer "${pkgname}-deb-converted.pkg.tar"
+#zstd -q -T0 -3 *pkg.tar
+
+#mv *.zst "$(dirname "$package_with_full_path")"
 fi
 
 # Announcement of successful creation of package

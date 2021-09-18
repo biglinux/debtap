@@ -1,50 +1,34 @@
-debtap
+This is a fork with modifications to turn more simple and add gui, the original project is: https://github.com/helixarch/debtap
 ======
 
-A script for converting .deb packages into Arch Linux packages, focused on accuracy
+# English
 
-# FAQ
+After many years of using .deb over the past few months I am adapting to .pkg.tar packages.
 
-**Q: What "debtap" stands for?**
+debtap does a good job, but I was looking for something more automated and just 2 clicks on a .deb, so I made some changes, in the way of running the post installation scripts and also in the way of detecting the package's dependencies, using now the namcap.
 
-**A:** DEB To Arch (Linux) Package
+I also made an interface in Yad so that the interaction is simpler and soon after generating the package, it is installed through the Pamac interface.
 
-**Q: Isn't better to download an official package or write a PKGBUILD in case I need to compile a package or convert a .deb package to an Arch Linux package?**
+So here we have a really simple and functional way to install .deb files on systems using the Pamac package manager.
 
-**A:** Sure it is, and I truely encourage you to do so. Debtap was written to create packages that either cannot be compiled (closed source packages) or cannot be built from AUR for various reasons (error during compiling or unavailable files), as a quick 'n' dirty solution and an extra option for creating Arch Linux packages for Arch Linux users.
+The tests were performed using Banco do Brasil's .deb warsaw, Caixa Econômica do Brasil, PJE-Office and Bricscad. All are installing correctly.
 
-**Q: So debtap will help me only in case I need to convert specific .deb packages to Arch Linux packages?**
+The converter will not always be able to install in a way that the program works correctly, but the level of success is higher than I expected to achieve.
 
-**A:** No. In case you need to write a new PKGBUILD for a package that already exists in the Debian/Ubuntu distributions, using parameter -p or -P it can generate a PKGBUILD and then edit it as you wish.
 
-**Q: What are the minimum requirements to run this script?**
 
-**A:** You need to have installed these dependencies: `bash`, `binutils` (provides ar utility for extracting .deb package and readelf), `pkgfile` and `fakeroot`.You must run at least once (preferably recently) `debtap -u` to create/update pkgfile and debtap database (you do this with root privileges).
+# Português
 
-**Q: Debtap needs a lot of time to convert a package. So, why this is happening?**
+Após muitos anos utilizando .deb nos últimos meses estou me adaptando aos pacotes .pkg.tar.
 
-**A:** Like I said, debtap is focused on accuracy. It won't just unpack a .deb package and then repackage its data to an Arch Linux package, ignoring metadata. Depending on the speed of your processor and the package itself, conversion can take from a few seconds to several minutes.
+O debtap faz um bom trabalho, mas eu procurava algo mais automatizado e que bastasse dar 2 cliques em um .deb, então fiz algumas modificações, na forma de executar os scripts de pós instalação e também na forma de detectar as dependências do pacote, utilizando agora o namcap.
 
-**Q: During conversion I get several warning messages, why?**
+Fiz também uma interface em Yad para que a interação seja mais simples e logo após gerar o pacote o mesmo é instalado através da interface do Pamac.
 
-**A:** Debtap cannot be 100% accurate for several reasons,  the main reason for this is the complexity of packages names. If you want to check the freshly generated `.PKGINFO` and `.INSTALL` (this is optional file) metadata files or even fix the untranslated packages names inside `.PKGINFO`, debtap offers you the option to edit these files before compressing the final package.
+Então aqui temos uma forma realmente simples e funcional para instalar arquivos .deb em sistemas que utilizam o gerenciador de pacotes Pamac.
 
-**Q: How do I use debtap?**
+Os testes foram feitos utilizando o .deb warsaw do Banco do Brasil, Caixa Econômica do Brasil, PJE-Office e o Bricscad. Todos estão instalando corretamente.
 
-**A:** The syntax is quite simple actually: `debtap [options] package_filename`
-For example: `debtap world-of-goo-demo_1.0_i386.deb`
+O conversor nem sempre irá conseguir instalar de forma que o programa funcione corretamente, mas o nível de acerto está maior do que eu esperava conseguir.
 
-Any recommendations or questions for debtap are welcomed!
-
-Available options:
-==================
-
-    -h  --help        Prints help
-    -u  --update      Update debtap database
-    -q  --quiet       Bypass all questions, except for editing metadata file(s)
-    -Q  --Quiet       Bypass all questions (not recommended)
-    -s  --pseudo      Create a pseudo-64-bit package from a 32-bit .deb package
-    -w  --wipeout     Wipeout versions from all dependencies, conflicts etc.
-    -p  --pkgbuild    Additionally generate a PKGBUILD file
-    -P  --Pkgbuild    Generate a PKGBUILD file only
-    -v  --version     Print version
+![](install-deb-ptbr.jpg)
