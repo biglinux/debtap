@@ -3227,6 +3227,7 @@ if [[ "${pkgname}" == "safesignidentityclient" ]]; then
     echo 'depend = xdg-utils' >> .PKGINFO
     echo 'depend = libmspack' >> .PKGINFO
     echo 'depend = ccid' >> .PKGINFO
+    sed -i 's|depend = teamspeak3||g' .PKGINFO
     sed -i 's|pkgname = safesignidentityclient|pkgname = safesignidentityclient-deb|g' .PKGINFO
 fi
 
