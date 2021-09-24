@@ -364,42 +364,42 @@ echo -e "${lightgreen}==>${NC} ${bold}Generating .PKGINFO file...${normal}"
 # Generating pkgname field
 if [[ $pseudo == set ]] && [[ $(ls -A usr/lib32 2> /dev/null) ]] && [[ ! $(ls -A usr/bin 2> /dev/null) ]]; then
 	for i in {git,bzr,darcs,hg}; do
-		if [[ $(grep -i ^Version: control | gawk '{print $2}' | grep -q $i; echo $?) == 0 ]]; then
-			echo "pkgname = lib32-`grep -i ^Package: control | gawk '{print $2}' | tr '[:upper:]' '[:lower:]'`"-$i | sed s"/-$i-$i$/-$i/" | sed s'/--/-/g' > .PKGINFO
+		if [[ $(grep -i ^Version: control | cut -f2 -d":" | sed 's/ //g' | sed 's/ //g'  | grep -q $i; echo $?) == 0 ]]; then
+			echo "pkgname = lib32-`grep -i ^Package: control | cut -f2 -d":" | sed 's/ //g' | sed 's/ //g' | tr '[:upper:]' '[:lower:]'`"-$i | sed s"/-$i-$i$/-$i/" | sed s'/--/-/g' > .PKGINFO
 		fi
 	done
-	if [[ $(grep -i ^Version: control | gawk '{print $2}' | grep -q svn; echo $?) == 0 ]]; then
-		echo "pkgname = lib32-`grep -i ^Package: control | gawk '{print $2}' | tr '[:upper:]' '[:lower:]'`"-svn | sed s'/-svn-svn$/-svn/' | sed s'/--/-/g' > .PKGINFO
+	if [[ $(grep -i ^Version: control | cut -f2 -d":" | sed 's/ //g' | sed 's/ //g'  | grep -q svn; echo $?) == 0 ]]; then
+		echo "pkgname = lib32-`grep -i ^Package: control | cut -f2 -d":" | sed 's/ //g' | sed 's/ //g' | tr '[:upper:]' '[:lower:]'`"-svn | sed s'/-svn-svn$/-svn/' | sed s'/--/-/g' > .PKGINFO
 	fi
 	for i in {cvs,CVS}; do
-		if [[ $(grep -i ^Version: control | gawk '{print $2}' | grep -q $i; echo $?) == 0 ]]; then
-			echo "pkgname = lib32-`grep -i ^Package: control | gawk '{print $2}' | tr '[:upper:]' '[:lower:]'`"-cvs | sed s'/-cvs-cvs$/-cvs/' | sed s'/--/-/g' > .PKGINFO
+		if [[ $(grep -i ^Version: control | cut -f2 -d":" | sed 's/ //g' | sed 's/ //g'  | grep -q $i; echo $?) == 0 ]]; then
+			echo "pkgname = lib32-`grep -i ^Package: control | cut -f2 -d":" | sed 's/ //g' | sed 's/ //g' | tr '[:upper:]' '[:lower:]'`"-cvs | sed s'/-cvs-cvs$/-cvs/' | sed s'/--/-/g' > .PKGINFO
 		fi
 	done
-	if [[ $(grep -i ^Version: control | gawk '{print $2}' | grep -q "svn\|git\|cvs\|CVS\|bzr\|darcs\|hg"; echo $?) != 0 ]]; then
-		echo "pkgname = lib32-`grep -i ^Package: control | gawk '{print $2}' | tr '[:upper:]' '[:lower:]'`" | sed s'/--/-/g' > .PKGINFO
+	if [[ $(grep -i ^Version: control | cut -f2 -d":" | sed 's/ //g' | sed 's/ //g'  | grep -q "svn\|git\|cvs\|CVS\|bzr\|darcs\|hg"; echo $?) != 0 ]]; then
+		echo "pkgname = lib32-`grep -i ^Package: control | cut -f2 -d":" | sed 's/ //g' | sed 's/ //g' | tr '[:upper:]' '[:lower:]'`" | sed s'/--/-/g' > .PKGINFO
 	fi
 else
 	for i in {git,bzr,darcs,hg}; do
-		if [[ $(grep -i ^Version: control | gawk '{print $2}' | grep -q $i; echo $?) == 0 ]]; then
-			echo "pkgname = `grep -i ^Package: control | gawk '{print $2}' | tr '[:upper:]' '[:lower:]'`"-$i | sed s"/-$i-$i$/-$i/" | sed s'/--/-/g' > .PKGINFO
+		if [[ $(grep -i ^Version: control | cut -f2 -d":" | sed 's/ //g' | sed 's/ //g'  | grep -q $i; echo $?) == 0 ]]; then
+			echo "pkgname = `grep -i ^Package: control | cut -f2 -d":" | sed 's/ //g' | sed 's/ //g' | tr '[:upper:]' '[:lower:]'`"-$i | sed s"/-$i-$i$/-$i/" | sed s'/--/-/g' > .PKGINFO
 		fi
 	done
-	if [[ $(grep -i ^Version: control | gawk '{print $2}' | grep -q svn; echo $?) == 0 ]]; then
-		echo "pkgname = `grep -i ^Package: control | gawk '{print $2}' | tr '[:upper:]' '[:lower:]'`"-svn | sed s'/-svn-svn$/-svn/' | sed s'/--/-/g' > .PKGINFO
+	if [[ $(grep -i ^Version: control | cut -f2 -d":" | sed 's/ //g' | sed 's/ //g'  | grep -q svn; echo $?) == 0 ]]; then
+		echo "pkgname = `grep -i ^Package: control | cut -f2 -d":" | sed 's/ //g' | sed 's/ //g' | tr '[:upper:]' '[:lower:]'`"-svn | sed s'/-svn-svn$/-svn/' | sed s'/--/-/g' > .PKGINFO
 	fi
 	for i in {cvs,CVS}; do
-		if [[ $(grep -i ^Version: control | gawk '{print $2}' | grep -q $i; echo $?) == 0 ]]; then
-			echo "pkgname = `grep -i ^Package: control | gawk '{print $2}' | tr '[:upper:]' '[:lower:]'`"-cvs | sed s'/-cvs-cvs$/-cvs/' | sed s'/--/-/g' > .PKGINFO
+		if [[ $(grep -i ^Version: control | cut -f2 -d":" | sed 's/ //g' | sed 's/ //g'  | grep -q $i; echo $?) == 0 ]]; then
+			echo "pkgname = `grep -i ^Package: control | cut -f2 -d":" | sed 's/ //g' | sed 's/ //g' | tr '[:upper:]' '[:lower:]'`"-cvs | sed s'/-cvs-cvs$/-cvs/' | sed s'/--/-/g' > .PKGINFO
 		fi
 	done
-	if [[ $(grep -i ^Version: control | gawk '{print $2}' | grep -q "svn\|git\|cvs\|CVS\|bzr\|darcs\|hg"; echo $?) != 0 ]]; then
-		echo "pkgname = `grep -i ^Package: control | gawk '{print $2}' | tr '[:upper:]' '[:lower:]'`" | sed s'/demo$/-demo/' | sed s'/trial$/-trial/' | sed s'/--/-/g' > .PKGINFO
+	if [[ $(grep -i ^Version: control | cut -f2 -d":" | sed 's/ //g' | sed 's/ //g'  | grep -q "svn\|git\|cvs\|CVS\|bzr\|darcs\|hg"; echo $?) != 0 ]]; then
+		echo "pkgname = `grep -i ^Package: control | cut -f2 -d":" | sed 's/ //g' | sed 's/ //g' | tr '[:upper:]' '[:lower:]'`" | sed s'/demo$/-demo/' | sed s'/trial$/-trial/' | sed s'/--/-/g' > .PKGINFO
 	fi
 fi
 
 # Generating pkgver field
-version=$(grep -i ^Version: control | gawk '{print $2}' | sed -e s'/[+~]/-/g' -e s'/[-._]alpha/alpha/' -e s'/[-._]beta/beta/' -e s'/[-._]pre/pre/' -e s'/[-._]rc/rc/' -e s'/[-._]dfsg/dfsg/' | gawk -F 'dev' '{print $1}' | sed -e s'/-\(ubuntu\|debian\|build\|dfsg\|nobinonly\|ppa\|nmu\|deb\)[0-9]\+\.[0-9]\+\.[0-9]\+//g' -e s'/-[0-9]\+\.[0-9]\+\(ubuntu\|debian\|build\|dfsg\|nobinonly\|ppa\|nmu\|deb\)[0-9]\+\.[0-9]\+[a-z]*[0-9]*//g' -e s'/-[0-9]\+\.[0-9]\+\(ubuntu\|debian\|build\|dfsg\|nobinonly\|ppa\|nmu\|deb\)[0-9]\+[a-z]*[0-9]*//g' -e s'/-[0-9]*\(ubuntu\|debian\|build\|dfsg\|nobinonly\|ppa\|nmu\|deb\)[0-9]\+\.[0-9]\+[a-z]*[0-9]*//g' -e s'/-[0-9]*\(ubuntu\|debian\|build\|dfsg\|nobinonly\|ppa\|nmu\|deb\)[0-9]\+[a-z]*[0-9]*//g' -e s'/[a-z]*\(ubuntu\|debian\|build\|dfsg\|nobinonly\|ppa\|nmu\|deb\)[0-9]\+\.[0-9]\+[a-z]*[0-9]*//g' -e s'/[a-z]*\(ubuntu\|debian\|build\|dfsg\|nobinonly\|ppa\|nmu\|deb\)[0-9]*[a-z]*[0-9]*//g' -e s'/--/-/g' -e s'/\.\././g' | sed s'/\.$//')
+version=$(grep -i ^Version: control | cut -f2 -d":" | sed 's/ //g' | sed 's/ //g'  | sed -e s'/[+~]/-/g' -e s'/[-._]alpha/alpha/' -e s'/[-._]beta/beta/' -e s'/[-._]pre/pre/' -e s'/[-._]rc/rc/' -e s'/[-._]dfsg/dfsg/' | gawk -F 'dev' '{print $1}' | sed -e s'/-\(ubuntu\|debian\|build\|dfsg\|nobinonly\|ppa\|nmu\|deb\)[0-9]\+\.[0-9]\+\.[0-9]\+//g' -e s'/-[0-9]\+\.[0-9]\+\(ubuntu\|debian\|build\|dfsg\|nobinonly\|ppa\|nmu\|deb\)[0-9]\+\.[0-9]\+[a-z]*[0-9]*//g' -e s'/-[0-9]\+\.[0-9]\+\(ubuntu\|debian\|build\|dfsg\|nobinonly\|ppa\|nmu\|deb\)[0-9]\+[a-z]*[0-9]*//g' -e s'/-[0-9]*\(ubuntu\|debian\|build\|dfsg\|nobinonly\|ppa\|nmu\|deb\)[0-9]\+\.[0-9]\+[a-z]*[0-9]*//g' -e s'/-[0-9]*\(ubuntu\|debian\|build\|dfsg\|nobinonly\|ppa\|nmu\|deb\)[0-9]\+[a-z]*[0-9]*//g' -e s'/[a-z]*\(ubuntu\|debian\|build\|dfsg\|nobinonly\|ppa\|nmu\|deb\)[0-9]\+\.[0-9]\+[a-z]*[0-9]*//g' -e s'/[a-z]*\(ubuntu\|debian\|build\|dfsg\|nobinonly\|ppa\|nmu\|deb\)[0-9]*[a-z]*[0-9]*//g' -e s'/--/-/g' -e s'/\.\././g' | sed s'/\.$//')
 for i in {git,bzr,darcs,hg}; do
     if [[ $(echo $version | grep -q $i; echo $?) == 0 ]]; then
 		echo "pkgver = `echo $version | gawk -F "$i" '{print $2}' | gawk -F '-' '{print $1}'`"-1 >> .PKGINFO
@@ -2969,7 +2969,8 @@ echo -e "\n${lightgreen}==>${NC} ${bold}Checking and generating .INSTALL file (i
 
 SAVEIFS=$IFS
 IFS=$'\n'
-pkgname="$(grep -i ^Package: control | gawk '{print $2}' | tr '[:upper:]' '[:lower:]')"
+pkgname="$(grep -i ^Package: control | cut -f2 -d":" | sed 's/ //g' | sed 's/ //g' | tr '[:upper:]' '[:lower:]')"
+
 echo "pre_install() {" > tempfile1
 if [[ -e preinst ]]; then
 	sed -i -e '/how this script works/,/debian-policy/d' -e '/how this script works/,/version>/d' -e '/dh_installdeb/,/DEBHELPER/d' preinst
@@ -3195,6 +3196,10 @@ if [[ "${pkgname}" == "warsaw" ]]; then
     sed -i 's|pkgname = warsaw|pkgname = warsaw-deb|g' .PKGINFO
 fi
 
+# Fix shodo
+if [[ "${pkgname}" == "shodo" ]]; then
+    sed -i 's|pkgname = shodo|pkgname = shodo-deb|g' .PKGINFO
+fi
 
 if [ "$disable_namcap" != "y" ]; then
 
