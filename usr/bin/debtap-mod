@@ -3154,6 +3154,14 @@ fi
 
 rm -rf tempfile*
 
+
+# Fix shodo part 1
+
+if [[ "${pkgname}" == "shodo" ]]; then
+    pamac-installer --build jre8
+    sed -i 's|Exec=java|Exec=/usr/lib/jvm/java-8-jre/jre/bin/java|g' usr/share/shodo/shortcuts/shodo.desktop
+fi
+
 # Removing metadata of original .deb package
 rm -rf control preinst postinst prerm postrm conffiles
 
@@ -3196,9 +3204,10 @@ if [[ "${pkgname}" == "warsaw" ]]; then
     sed -i 's|pkgname = warsaw|pkgname = warsaw-deb|g' .PKGINFO
 fi
 
-# Fix shodo
+# Fix shodo part 2
 if [[ "${pkgname}" == "shodo" ]]; then
     sed -i 's|pkgname = shodo|pkgname = shodo-deb|g' .PKGINFO
+    echo 'depend = jre8' >> .PKGINFO
 fi
 
 if [ "$disable_namcap" != "y" ]; then
