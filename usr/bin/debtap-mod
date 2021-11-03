@@ -3060,7 +3060,15 @@ if [[ $(grep -q '^post_install() {$' tempfile2 2> /dev/null; echo $?) == 0 ]]; t
     if [[ "$(echo "${pkgname}" | grep bricscad)" != "" ]]; then
         echo 'chmod 777 -R /var/bricsys' >> usr/share/deb-pkg-files/${pkgname}/postinst
     fi
-  
+    
+	#Fix to mobirise
+    if [[ "${pkgname}" == "mobirise" ]]; then
+        sed -i '/depend =/d' .PKGINFO
+    fi
+    
+    #Fix depends
+    sed -i '/depend = opera/d;/depend = signal/d;/depend = vivaldi/d;/depend = tuxedo/d;/depend = qmpp/d;/depend = emby/d;/depend = ledger/d' .PKGINFO
+
 	echo "}" >> tempfile2
 fi
 
