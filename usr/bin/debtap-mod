@@ -449,7 +449,7 @@ fi
 
 # Generating arch field
 if [[ $pseudo != set ]]; then
-	echo "arch = `grep -i ^Architecture: control | gawk '{print $2}' | sed -e s'/i386/i686/' -e s'/amd64/x86_64/' -e s'/armhf/armv7h/' -e s'/arm64/aarch64/' -e s'/all/any/'`" >> .PKGINFO
+	echo "arch = `grep -i ^Architecture: control | gawk '{print $2}' | sed -e s'/i386/x86_64/' -e s'/amd64/x86_64/' -e s'/armhf/armv7h/' -e s'/arm64/aarch64/' -e s'/all/any/'`" >> .PKGINFO
 else
 	echo "arch = x86_64" >> .PKGINFO
 fi
@@ -3266,6 +3266,7 @@ tar --delete -f *pkg.tar .PKGINFO
 tar -uf *pkg.tar .PKGINFO
 
 pamac-installer "${pkgname}-deb-converted.pkg.tar"
+
 #zstd -q -T0 -3 *pkg.tar
 
 #mv *.zst "$(dirname "$package_with_full_path")"
