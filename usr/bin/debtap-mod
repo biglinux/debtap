@@ -3243,6 +3243,13 @@ if [ "$disable_namcap" != "y" ]; then
 
 fi
 
+# Fix banrisul
+if [[ "${pkgname}" == "bjeps2xx" ]]; then
+    echo 'depend = ccid' >> .PKGINFO
+    echo 'depend = pcsc-tools' >> .PKGINFO
+    echo 'depend = perl-gtk3' >> .PKGINFO
+fi
+
 
 # Fix safesignidentityclient
 if [[ "${pkgname}" == "safesignidentityclient" ]]; then
