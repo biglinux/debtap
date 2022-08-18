@@ -3260,6 +3260,12 @@ if [[ "${pkgname}" == "safesignidentityclient" ]]; then
     sed -i 's|pkgname = safesignidentityclient|pkgname = safesignidentityclient-deb|g' .PKGINFO
 fi
 
+# Disable dependencies from all packages
+sed -i 's|depend = teamspeak3||g' .PKGINFO
+sed -i 's|depend = opera||g' .PKGINFO
+sed -i 's|depend = vivaldi||g' .PKGINFO
+
+
 # Prompting user for editing .PKGINFO
 if [[ $Quiet != set ]]; then
     kate -n .PKGINFO
