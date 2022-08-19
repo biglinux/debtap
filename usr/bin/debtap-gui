@@ -7,27 +7,22 @@ export TEXTDOMAIN=debtap-mod
 debfile="$1"
 
 set +H
-use_root=$(yad --form --text $"<big>Este sistema utiliza o formato de pacotes <span color='#CC2222'>.pkg.tar</span>, porém o arquivo está
-no formato <span color='#CC2222'>.deb</span>, leia antes de prosseguir com a instalação:
-    
-Dê preferência para pacotes nativos, feitos para o BigLinux, Manjaro,
-Arch ou outro sistema Linux compatível com o formato <span color='#CC2222'>.pkg.tar</span>.
+use_root=$(yad --form --image="/usr/share/pixmaps/deb.svg" --geometry=500x385  --form  --field="Leia antes de prosseguir com a instalação::TXT" "Dê preferência para pacotes nativos, feitos para o BigLinux, Manjaro, Arch ou outro sistema Linux compatível com o formato <span color='#CC2222'>.pkg.tar</span>.
 
-Uma opção é utilizar programas feitos para qualquer sistema
-Linux, geralmente no formato <span color='#CC2222'>.run</span>, <span color='#CC2222'>.appimage</span> ou <span color='#CC2222'>.flatpak</span>.
+Uma opção é utilizar programas feitos para qualquer sistema Linux, geralmente no formato <span color='#CC2222'>.run</span>, <span color='#CC2222'>.appimage</span> ou <span color='#CC2222'>.flatpak</span>.
 
-Caso o programa não esteja disponível nos formatos anteriores, o <span color='#CC2222'>.deb</span>
-pode ser convertido para <span color='#CC2222'>.pkg.tar</span> e instalado neste sistema, porém,
-talvez a instalação não funcione corretamente. Deseja prosseguir com a
-instalação?
+Caso o programa não esteja disponível nos formatos anteriores, o <span color='#CC2222'>.deb</span> pode ser convertido para <span color='#CC2222'>.pkg.tar</span> e instalado neste sistema, porém, talvez a instalação não funcione corretamente."  --field="<span color='#CC2222'>* Alertas de erro durante a instalação, em geral, não comprometem o funcionamento correto do programa.</span>:LBL" \
+--text $"<big>Este sistema utiliza o formato de pacotes <span color='#CC2222'>.pkg.tar</span>, porém o arquivo está no formato <span color='#CC2222'>.deb</span>.
 
-<span color='#CC2222'>* Alertas de erro durante a instalação, em geral, não comprometem o funcionamento correto do programa.</span></big>
+Deseja prosseguir com a instalação?</big>
 " \
---button=$" Instalar revisando os arquivos de configuração"!/usr/share/pixmaps/debtap-mod-unknownapp.png:1 \
---button=$" Instalar"!/usr/share/pixmaps/debtap-mod-running.png:2 \
---button=$" Fechar"!/usr/share/pixmaps/debtap-mod-waiting.png:3 \
+--button=$" Instalar revisando os arquivos de configuração"!gtk-preferences:1 \
+--button=$" Instalar"!gtk-apply:2 \
+--button=$" Fechar"!gtk-cancel:3 \
 --center --on-top --borders=20 --title=$"Instalar pacote .deb" \
---window-icon="/usr/share/pixmaps/debian-logo.png")
+--window-icon="/usr/share/pixmaps/debian-logo.png"
+
+)
 
         yadresult=$?
 
