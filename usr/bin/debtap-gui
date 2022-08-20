@@ -7,7 +7,7 @@ export TEXTDOMAIN=debtap-mod
 debfile="$1"
 
 set +H
-use_root=$(yad --form --image="/usr/share/pixmaps/deb.svg" --geometry=500x385  --form  --field="Leia antes de prosseguir com a instalação::TXT" "Dê preferência para pacotes nativos, feitos para o BigLinux, Manjaro, Arch ou outro sistema Linux compatível com o formato <span color='#CC2222'>.pkg.tar</span>.
+use_root=$(yad --form --image="/usr/share/pixmaps/deb.svg" --geometry=720x400  --form  --field="Leia antes de prosseguir com a instalação::TXT" "Dê preferência para pacotes nativos, feitos para o BigLinux, Manjaro, Arch ou outro sistema Linux compatível com o formato <span color='#CC2222'>.pkg.tar</span>.
 
 Uma opção é utilizar programas feitos para qualquer sistema Linux, geralmente no formato <span color='#CC2222'>.run</span>, <span color='#CC2222'>.appimage</span> ou <span color='#CC2222'>.flatpak</span>.
 
