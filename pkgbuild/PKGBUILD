@@ -9,7 +9,7 @@ url="https://github.com/biglinux/debtap-mod"
 pkgdesc="Convert and install .deb packages"
 source=("git+https://github.com/biglinux/debtap-mod.git")
 md5sums=(SKIP)
-depends=('yad' 'namcap' 'pamac-gtk' 'kate' 'zenity' 'fakeroot')
+depends=('yad' 'namcap' 'pamac-gtk' 'zenity' 'fakeroot')
 
 package() {
     # Verify default folder
