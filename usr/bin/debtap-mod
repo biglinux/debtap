@@ -156,6 +156,8 @@ if [[ $control_tar_check == control.tar.gz ]]; then
     ar p "$package_with_full_path" control.tar.gz | tar xz
 elif [[ $control_tar_check == control.tar.xz ]]; then
     ar p "$package_with_full_path" control.tar.xz | tar xJ
+elif [[ $control_tar_check == control.tar.zst ]]; then
+    ar p "$package_with_full_path" control.tar.zst | tar x --zstd
 fi
 if [[ $pseudo == set ]] && [[ $(grep ^Architecture: control | grep -q i386; echo $?) != 0 ]]; then
     echo -e "${red}Error: Invalid package architecture. Removing extracted package data and exiting...${NC}"
@@ -171,6 +173,8 @@ elif [[ $data_tar_check == data.tar.xz ]]; then
     ar p "$package_with_full_path" data.tar.xz | tar xJ
 elif [[ $data_tar_check == data.tar.bz2 ]]; then
     ar p "$package_with_full_path" data.tar.bz2 | tar xj
+elif [[ $data_tar_check == data.tar.zst ]]; then
+    ar p "$package_with_full_path" data.tar.zst | tar x --zstd
 elif [[ $data_tar_check == data.tar.lzma ]]; then
     ar p "$package_with_full_path" data.tar.lzma | tar xJ
 elif [[ $data_tar_check == data.tar ]]; then
