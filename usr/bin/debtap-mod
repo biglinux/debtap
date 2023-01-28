@@ -295,9 +295,9 @@ fi
  if [[ -e sbin ]]; then
  	mkdir -p usr/bin 2> /dev/null; mv sbin/* usr/bin; rm -rf sbin
  fi
-# if [[ -e usr/sbin ]]; then
-# 	mkdir usr/bin 2> /dev/null; mv usr/sbin/* usr/bin; rm -rf usr/sbin
-# fi
+if [[ -e usr/sbin ]]; then
+	mkdir usr/bin 2> /dev/null; mv usr/sbin/* usr/bin; rm -rf usr/sbin
+fi
 # if [[ -e usr/local/games ]]; then
 # 	mkdir usr/bin 2> /dev/null; mv usr/local/games/* usr/bin; rm -rf usr/local/games
 # fi
