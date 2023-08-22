@@ -3174,6 +3174,12 @@ if [[ "${pkgname}" == "shodo" ]]; then
     sed -i 's|Exec=java|Exec=/usr/lib/jvm/java-8-jre/jre/bin/java|g' usr/share/shodo/shortcuts/shodo.desktop
 fi
 
+#Fix to neoid part 1
+if [[ "${pkgname}" == "neoid-desktop" ]]; then
+	rm -f usr/share/neoid-desktop/jre/lib/amd64/libfreetype.so.6
+	rm -f usr/share/neoid-desktop/jre/lib/amd64/libfreetype.so
+fi
+
 # Removing metadata of original .deb package
 rm -rf control preinst postinst prerm postrm conffiles
 
@@ -3220,6 +3226,11 @@ fi
 if [[ "${pkgname}" == "shodo" ]]; then
     sed -i 's|pkgname = shodo|pkgname = shodo-deb|g' .PKGINFO
     echo 'depend = jre8' >> .PKGINFO
+fi
+
+#Fix to neoid part 2
+if [[ "${pkgname}" == "neoid-desktop" ]]; then
+	sed -i '/depend =/d' .PKGINFO
 fi
 
 if [ "$disable_namcap" != "y" ]; then
