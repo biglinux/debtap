@@ -3246,7 +3246,7 @@ if [ "$disable_namcap" != "y" ]; then
 
     if [ "$(cat /tmp/namcap-output-libdepends-tmp)" != "" ]; then
 
-        LANG=C pamac search -f $(cat /tmp/namcap-output-libdepends-tmp) | grep -v "No package owns" | awk '{print $NF}' | sort -h | uniq | grep -v "dbus-x11" | grep -v "palemoon-bin" | grep -v "gtk2-compatibility" | grep -v "cuda-tools" >> /tmp/namcap-output-depends-tmp
+        LANG=C pamac search -f $(cat /tmp/namcap-output-libdepends-tmp) | grep -v "No package owns" | awk '{print $NF}' | sort -h | uniq | grep -v "dbus-x11" | grep -v "palemoon-bin" | grep -v "gtk2-compatibility" | grep -v "cuda-tools" | grep -v jre | grep -v jdk | grep -v xiaomi | grep -v android-studio | grep -v gephi | grep -v java >> /tmp/namcap-output-depends-tmp
 
     fi
 
