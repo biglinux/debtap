@@ -3180,6 +3180,12 @@ if [[ "${pkgname}" == "neoid-desktop" ]]; then
 	rm -f usr/share/neoid-desktop/jre/lib/amd64/libfreetype.so
 fi
 
+#Fix to serproid-desktop
+if [[ "${pkgname}" == "serproid-desktop" ]]; then
+	rm -f /usr/share/serproid-desktop/jre/lib/amd64/libfreetype.so.6
+	rm -f /usr/share/serproid-desktop/jre/lib/amd64/libfreetype.so
+fi
+
 # Removing metadata of original .deb package
 rm -rf control preinst postinst prerm postrm conffiles
 
@@ -3230,6 +3236,11 @@ fi
 
 #Fix to neoid part 2
 if [[ "${pkgname}" == "neoid-desktop" ]]; then
+	sed -i '/depend =/d' .PKGINFO
+fi
+
+#Fix to serproid-desktop part 2
+if [[ "${pkgname}" == "serproid-desktop" ]]; then
 	sed -i '/depend =/d' .PKGINFO
 fi
 
